@@ -1,0 +1,17 @@
+.alias__text {
+    height: 16px;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+    
+    a {
+        width: 100%;
+        font-size: 13px;
+        color: #68a1ff;
+        position: absolute;
+        top: 0;
+        left: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}

@@ -1,0 +1,12 @@
+.button {
+    padding: 10px 30px;
+    background: linear-gradient(to bottom,#212f6c,#212f6c);
+    border-radius: 10px;
+    font-size: 14px;
+
+    &.button__wrapper {
+        padding: 0;
+        background: transparent;
+        border-radius: 0;
+    }
+}

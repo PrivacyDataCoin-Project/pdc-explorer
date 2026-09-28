@@ -1,0 +1,125 @@
+.header {
+    .logo img {
+        display: block;
+        height: 48px;
+        width: auto;
+    }
+
+    .header__top {
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, .1);
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 45px;
+
+            >a,
+            p {
+                font-size: 16px;
+                color: #ffffff;
+
+                &.selected {
+                    font-weight: 600;
+                }
+            }
+
+            >p {
+                opacity: 0.7;
+                pointer-events: none;
+            }
+        }
+
+        .header__burger__button {
+            padding: 0;
+            border-radius: 0;
+            background: transparent;
+            display: none;
+        }
+
+        .header__net_switch {
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-wrap: nowrap;
+
+            button {
+                border-radius: 0;
+
+                &.selected {
+                    background: #1b3a8a;
+                }
+            }
+        }
+
+        .header__top__main {
+            display: flex;
+            gap: 56px;
+        }
+
+        .header__top__right {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+    }
+
+    .header__nav__mobile {
+        margin-top: 12px;
+        margin-bottom: 30px;
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+
+        >a,
+        p {
+            height: 35px;
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+            color: #ffffff;
+
+            &.selected {
+                background: linear-gradient(to right, #1b3a8a, #32439f);
+            }
+        }
+
+        p {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+    }
+
+
+    @media screen and (max-width: 1050px) {
+        .header__top {
+            justify-content: space-between;
+
+            .header__burger__button {
+                display: block;
+            }
+
+            nav {
+                display: none;
+            }
+        }
+
+        .header__top__right {
+            gap: 20px !important;
+        }
+
+        .header__switch_btn {
+            button {
+                padding: 8px 10px;
+            }
+        }
+
+        .header__nav__mobile {
+            display: flex;
+        }
+    }
+}

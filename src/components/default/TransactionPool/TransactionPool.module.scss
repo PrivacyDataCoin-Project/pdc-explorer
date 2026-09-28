@@ -1,0 +1,34 @@
+.transaction_pool {
+    background-color: #234ee21a;
+    border-radius: 10px;
+    overflow: hidden;
+
+    .transation_pool__title {
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .transation_pool__empty {
+        height: 125px;
+        padding-bottom: 25px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        > p {
+            font-size: 20px;
+            font-weight: 300;
+            color: #9eaacc;
+        }
+    }
+
+    @media screen and (max-width: 761px) {
+        overflow-x: auto;
+
+        > .transaction__table {
+            width: 850px;
+        }
+    }
+}

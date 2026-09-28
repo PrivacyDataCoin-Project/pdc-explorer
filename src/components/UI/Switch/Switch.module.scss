@@ -1,0 +1,22 @@
+.switch {
+    width: 232px;
+    height: 34px;
+    background-color: #234EE233;
+    display: flex;
+    align-items: center;
+    border-radius: 10px;
+    
+    .switch__item {
+        height: 100%;
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 10px;
+
+
+        &.switch__item_selected {
+            background-color: #1F8FEB;
+        }
+    }
+}

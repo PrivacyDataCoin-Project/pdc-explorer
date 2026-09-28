@@ -1,0 +1,48 @@
+.assets__stats {
+    margin-bottom: 20px;
+}
+
+.assets__table {
+    overflow: hidden;
+    border-radius: 10px;
+
+    .assets__table_asset-id {
+        display: flex;
+        gap: 10px;
+
+        > span {
+            flex: 1;
+        }
+    }
+}
+
+.asset_popup__bottom {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    > button {
+        background: #2e599f;
+        &:hover {
+            background: #2c6ace;
+        }
+    }
+}
+
+.asset_popup__not_found {
+    > h3 {
+        text-align: center;
+        font-weight: 600;
+    }
+}
+
+@media screen and (max-width: 850px) {
+    .assets__table {
+        overflow-x: auto;
+
+        > :first-child {
+            width: 850px;
+        }
+    }
+}

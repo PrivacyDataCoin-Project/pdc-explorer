@@ -1,0 +1,41 @@
+.charts {
+    .charts__chart__wrapper {
+        background-color: #2b3768;
+        .charts__chart__title {
+            padding: 28px 10px;
+            display: flex;
+            justify-content: center;
+
+            > p {
+                color: #9eaacc;
+            }
+        }
+
+        .charts__chart {
+            * {
+                transition: none;
+            }
+        }
+    }
+
+    .charts__container {
+        margin-bottom: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-column-gap: 20px;
+        grid-row-gap: 20px;
+        justify-content: center;
+
+        @media screen and (max-width: 400px) {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+    }
+
+    .charts__preloader {
+        width: 100%;
+        height: calc(100vh - 200px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+}

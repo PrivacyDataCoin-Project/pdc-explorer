@@ -1,0 +1,113 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+    transition: all 0.3s;
+    font-family: "Open Sans", sans-serif;
+    line-height: 100%;
+    color: #ffffff;
+}
+
+#__next {
+    max-width: 1200px;
+    padding: 0 15px;
+    margin: 0 auto;
+}
+
+body {
+    min-height: 100vh;
+    transition: none;
+    background: radial-gradient(circle at 50% 2%,#365099 0%,#213069 15%,#091233 39%);
+    background-repeat: no-repeat;
+}
+
+h2 {
+    font-size: 28px;
+    font-weight: 300;
+}
+
+h3 {
+    font-size: 24px;
+    font-weight: 300;
+}
+
+h4 {
+    font-size: 20px;
+    font-weight: 400;
+}
+
+p, a {
+    font-size: 14px;
+}
+
+a {
+    text-decoration: none;
+    color: #68a1ff;
+}
+
+button {
+    cursor: pointer;
+}
+
+
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #32439f;
+    border-radius: 10px;
+    border: 1px solid #ffffff;
+}
+
+::-webkit-scrollbar-track {
+    border-radius: 10px;
+    background-color: #fff;
+}
+
+
+@font-face {
+    font-family: 'Open Sans';
+    src: url(../assets/fonts/OpenSans/OpenSans-Light.ttf) format("opentype");
+    font-weight: 300;
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    src: url(../assets/fonts/OpenSans/OpenSans-Regular.ttf) format("opentype");
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    src: url(../assets/fonts/OpenSans/OpenSans-Medium.ttf) format("opentype");
+    font-weight: 500;
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    src: url(../assets/fonts/OpenSans/OpenSans-SemiBold.ttf) format("opentype");
+    font-weight: 600;
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    src: url(../assets/fonts/OpenSans/OpenSans-Bold.ttf) format("opentype");
+    font-weight: 700;
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    src: url(../assets/fonts/OpenSans/OpenSans-ExtraBold.ttf) format("opentype");
+    font-weight: 800;
+}
+
+@font-face {
+    font-family: "Inconsolata";
+    src: url(../assets/fonts/Inconsolata/Inconsolata-Regular.ttf) format("opentype");
+    font-weight: 400;
+}

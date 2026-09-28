@@ -1,0 +1,59 @@
+.blockchain {
+    > :not(:first-child, :nth-child(2)) {
+        margin-bottom: 25px;
+    }
+
+    .info__top__daemon {
+        display: flex;
+        gap: 25px;
+
+        &_item {
+            font-size: 14px;
+            color: #9eaacc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .explorer__status {
+                background: linear-gradient(90deg, #0C153A 0%, #091233 100%);
+                padding: 4px 8px;
+                border-radius: 50px;
+                font-size: 12px;
+                font-weight: 400;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+
+                &.offline {
+                    .status__item {
+                        background-color: #FF6767;
+                    }
+                }
+
+                &.online {
+                    .status__item {
+                        background-color: #47EFFB;
+                    }
+                }
+
+                &.syncing {
+                    .status__item {
+                        background-color: #E6C54E;
+                    }
+                }
+
+                .status__item {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                }
+            }
+        }
+
+        @media screen and (max-width: 991px) {
+            >p:not(:first-child) {
+                display: none;
+            }
+        }
+    }
+}

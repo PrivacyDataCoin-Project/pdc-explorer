@@ -1,0 +1,20 @@
+.chart_page {
+    .chart_page__chart__wrapper {
+        margin-bottom: 30px;
+        padding: 20px 0;
+    
+        .chart_page__chart {
+            * {
+                transition: none;
+            }
+        }
+    }
+
+    .chart_page__preloader {
+        width: 100%;
+        height: calc(100vh - 200px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+}

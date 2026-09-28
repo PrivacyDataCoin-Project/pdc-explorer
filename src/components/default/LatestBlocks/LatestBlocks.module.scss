@@ -1,0 +1,32 @@
+.blockchain__latest_blocks {
+    background-color: #234ee21a;
+    border-radius: 10px;
+    overflow: hidden;
+
+    &__title {
+        padding: 18px 20px;
+        display: flex;
+        gap: 20px;
+        white-space: nowrap;
+
+        .status__badge {
+            background-color: #091233;
+            padding: 6px;
+            padding-right: 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 400;
+        }
+    }
+
+    @media screen and (max-width: 761px) {
+        overflow-x: auto;
+
+        > :last-child {
+            width: 850px;
+        }
+    }
+}

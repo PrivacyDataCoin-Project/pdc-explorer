@@ -1,0 +1,14 @@
+.alt_blocks {
+    .alt_blocks__table {
+        border-radius: 10px;
+        overflow: hidden;
+
+        @media screen and (max-width: 850px) {
+            overflow-x: auto;
+
+            > :first-child {
+                width: 850px;
+            }
+        }
+    }
+}

@@ -1,0 +1,111 @@
+.blockchain__info__top {
+    height: 77px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    h4 {
+        display: none;
+        white-space: nowrap;
+    }
+
+    .info__back {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        > p { 
+            font-size: 16px;
+        }
+
+        > svg {
+            width: 13px;
+            height: 13px;
+        }
+    }
+
+    .info__top__input {
+        width: 100%;
+        max-width: 330px;
+        position: relative;
+
+        > p {
+            color: #ff5252;
+            position: absolute;
+            top: -15px;
+        }
+
+        > input {
+            width: 100%;
+            border-radius: 10px;
+            background-color: #234ee21a;
+            padding-right: 50px;
+        }
+
+        > button {
+            height: 30px;
+            width: 30px;
+            padding: 0;
+            border-radius: 0;
+            background: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+        }
+    }
+
+    @media screen and (max-width: 761px) {
+        .hiding_element {
+            display: none;
+        }
+        
+        h4 {
+            display: block;
+        }
+
+        &.info__top__hidden {
+            display: none;
+        }
+    }
+
+    @media screen and (max-width: 575px) {
+        justify-content: flex-end;
+
+        .info__top__title {
+            display: none;
+        }
+
+        .info__back {
+            display: none;
+        }
+
+
+        &.blockchain__input__closed {
+            justify-content: space-between;
+
+
+            .info__top__input {
+                max-width: 50px;
+                
+                > input {
+                    padding-left: 0;
+                    pointer-events: none;
+                }
+            }
+            
+            .info__back {
+                display: flex;
+            }
+    
+            
+            .info__top__title {
+                display: block;
+            }
+        }
+    }
+
+}

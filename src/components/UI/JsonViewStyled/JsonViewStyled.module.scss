@@ -1,0 +1,25 @@
+.json__container {
+    // overflow: hidden;
+
+    > :first-child {
+        margin: 0;
+    }
+}
+
+.json__element {
+    margin-left: 25px;
+
+    &:not(:last-child) {
+        margin-bottom: 0px;
+    }
+
+    span {
+        font-family: "Inconsolata";
+        font-size: 13px;
+        font-weight: 400;
+    }
+}
+
+.json__number {
+    color: #009688;
+}
