@@ -37,15 +37,13 @@ function StatsPanel(props: { visibilityInfo?: VisibilityInfo | null, fetchedInfo
     const powDiff = Utils.formatNumber(info?.pow_difficulty, 0) || "...";
     const coinsEmitted = Utils.toShiftedNumber(info?.total_coins, 12) || "...";
     const transactionsString = Utils.formatNumber(transactions, 0) || "...";
-    const hashrate = Utils.toShiftedNumber(info?.current_network_hashrate_350, state.netMode === "TEST" ? 0 : 9, 2) || "...";
+    const hashrate = Utils.toShiftedNumber(info?.current_network_hashrate_350, state.netMode === "TEST" ? 0 : 6, 3) || "...";
 
     const stackedCoins = Utils.toShiftedNumber(visibilityInfo?.amount.toString(), 12) || "...";
-    const percentage = visibilityInfo?.percentage || "...";
-    const APY = visibilityInfo?.apy ? parseFloat((visibilityInfo?.apy || 0).toFixed(4)) : "...";
-    const devFund = Utils.toShiftedNumber(visibilityInfo?.balance.toString(), 12) || "...";
+    const percentage = visibilityInfo?.percentage != null ? visibilityInfo.percentage : "...";
     const pdcBurned = visibilityInfo?.pdc_burned?.toFixed(2) ?? "...";
-    const posValue = visibilityInfo?.pos_value
-        ? Utils.formatNumber(visibilityInfo?.pos_value, 2) || "..."
+    const posValue = visibilityInfo?.pos_value != null
+        ? Utils.formatNumber(visibilityInfo.pos_value, 0)
         : "...";
 
     function TopItem(props: { title: string, amount: string | ReactNode, percent?: string, customCurrency?: boolean }) {
@@ -102,15 +100,6 @@ function StatsPanel(props: { visibilityInfo?: VisibilityInfo | null, fetchedInfo
                     percent={percentage}
                 />
                 <TopItem
-                    title="Dev Fund"
-                    amount={devFund}
-                />
-                <TopItem
-                    title="Real Time APY"
-                    amount={`${APY}%`}
-                    customCurrency={true}
-                />
-                <TopItem
                     title="PDC Burned"
                     amount={
                         <div className={styles["item__value__burn"]}>
@@ -157,7 +146,7 @@ function StatsPanel(props: { visibilityInfo?: VisibilityInfo | null, fetchedInfo
                             </div>
 
                             <div>
-                                <p>PoW: {hashrate} GH/sec</p>
+                                <p>PoW: {hashrate} MH/s</p>
                             </div>
                         </div>
                     </BottomItem>
@@ -194,7 +183,7 @@ function StatsPanel(props: { visibilityInfo?: VisibilityInfo | null, fetchedInfo
                             </div>
 
                             <div>
-                                <p>PoW: {hashrate} GH/sec</p>
+                                <p>PoW: {hashrate} MH/s</p>
                             </div>
                         </div>
                     </BottomItem>

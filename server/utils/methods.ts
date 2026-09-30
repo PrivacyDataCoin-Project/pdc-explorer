@@ -65,60 +65,48 @@ export async function getVisibilityInfo() {
         balance: 0,
         unlocked_balance: 0,
         apy: 0,
-        pdc_burned: undefined as (number | undefined),
+        pdc_burned: state.pdcBurned ?? 0,
         pos_value: 0,
     }
 
     try {
-        if (config.enableVisibilityInfo) {
-            const [res1, res2, res3] = await axios.all([
-                getbalance(),
-                get_mining_history(),
-                get_info()
-            ])
+        const dayAgo = Math.floor(Date.now() / 1000) - 86400;
+        result.pos_value = await Block.count({
+            where: {
+                type: "0",
+                actual_timestamp: {
+                    [Op.gt]: dayAgo
+                }
+            }
+        });
 
-            console.log('RES1', res1.data);
-
-            const pos_diff_to_total_ratio = new BigNumber(res3.data.result.pos_difficulty)
-                .dividedBy(new BigNumber(res3.data.result.total_coins));
-
+        const info = await get_info();
+        const daemon = info.data?.result;
+        if (daemon?.pos_difficulty && daemon?.total_coins && daemon.total_coins !== "0") {
+            const posDiff = new BigNumber(daemon.pos_difficulty);
+            const totalCoins = new BigNumber(daemon.total_coins);
             const divider = new BigNumber(176.3630);
+            const stakedPercentage = new BigNumber(0.55)
+                .multipliedBy(posDiff.dividedBy(totalCoins))
+                .dividedBy(divider)
+                .multipliedBy(100);
+            result.percentage = parseFloat(stakedPercentage.toFixed(4));
+            result.amount = totalCoins.dividedBy(100).multipliedBy(stakedPercentage).integerValue(BigNumber.ROUND_HALF_UP).toNumber();
+        }
 
-            const stakedPercentage = (
-                new BigNumber(0.55).multipliedBy(pos_diff_to_total_ratio)
-            ).dividedBy(divider).multipliedBy(100).toNumber();
+        if (config.enableVisibilityInfo && config.auditable_wallet?.api) {
+            const [res1, res2] = await axios.all([
+                getbalance(),
+                get_mining_history()
+            ]);
 
-
-            result.percentage = parseFloat(stakedPercentage.toFixed(2));
-
-            const stakedCoins = new BigNumber(res3.data.result.total_coins)
-                .dividedBy(100)
-                .multipliedBy(new BigNumber(result.percentage));
-
-            result.amount = stakedCoins.toNumber();
-            result.balance = res1.data.result.balance
+            result.balance = res1.data.result.balance;
             result.unlocked_balance = res1.data.result.unlocked_balance;
-            result.pdc_burned = state.pdcBurned;
 
             const stakedNumber = new BigNumber(result.amount).dividedBy(new BigNumber(10 ** 12)).toNumber();
-
-            // PDC block target is 60s, so CURRENCY_BLOCKS_PER_DAY is 1440.
-            result.apy = 1440 * 365 / stakedNumber * 100;
-
-            let stakedCoinsLast7Days = new BigNumber(0);
-    
-            const mined_entries = res2?.data?.result?.mined_entries || [];
-        
-            for (const item of mined_entries) {
-                stakedCoinsLast7Days = stakedCoinsLast7Days.plus(item.a);
+            if (stakedNumber > 0) {
+                result.apy = 1440 * 365 / stakedNumber * 100;
             }
-
-
-            const coinsPerDay = stakedCoinsLast7Days.div(7);
-   
-            const neededToStakeCoinPerDay = new BigNumber(res1.data.result.balance).div(coinsPerDay);
-            
-            result.pos_value = neededToStakeCoinPerDay.toNumber();
         }
     } catch (error) {
         log(`getVisibilityInfo() ERROR ${error}`)

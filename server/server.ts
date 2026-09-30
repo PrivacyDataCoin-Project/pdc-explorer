@@ -561,9 +561,9 @@ async function waitForDb() {
                         literal('"actual_timestamp" - ("actual_timestamp" % 3600)'),
                         'at',
                     ],
-                    [fn('avg', literal('"difficulty120"::REAL')), 'd120'],
-                    [fn('avg', literal('"hashrate100"::REAL')), 'h100'],
-                    [fn('avg', literal('"hashrate400"::REAL')), 'h400'],
+                    [fn('avg', literal('("difficulty"::REAL / 60.0)')), 'd120'],
+                    [fn('avg', literal('("difficulty"::REAL / 60.0)')), 'h100'],
+                    [fn('avg', literal('("difficulty"::REAL / 60.0)')), 'h400'],
                 ],
                 group: ['at'],
                 where: {
@@ -1938,7 +1938,7 @@ async function waitForDb() {
                 const txs = await Transaction.findAll({
                     where: {
                         keeper_block: {
-                            [Op.gte]: 2555000
+                            [Op.gt]: 100
                         },
                         fee: {
                             [Op.ne]: "0"

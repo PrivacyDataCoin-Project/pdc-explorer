@@ -160,9 +160,8 @@ function Charts() {
                         requestTitle="avg-trans-per-block"
                     />
                     <Chart 
-                        title="Hash Rate (inactive)" 
+                        title="Hash Rate" 
                         requestTitle="hash-rate"
-                        disabled={true}
                     />
                     <Chart 
                         title="PoW Difficulty" 
