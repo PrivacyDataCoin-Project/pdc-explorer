@@ -5,17 +5,17 @@
     overflow-x: hidden;
 
     &__info_status {
-        background: #5D31C8;
+        background: var(--blue);
 
         th {
-            color: #FFFFFF !important;
+            color: var(--ink) !important;
             text-transform: none !important;
             font-weight: 600;
             font-size: 14px;
             text-align-last: left;
 
             span {
-                color: #68A1FF;
+                color: var(--cyan);
             }
         }
     }
@@ -50,12 +50,12 @@
     }
 
     thead {
-        background: linear-gradient(to right, #1b3a8a, #32439f);
+        background: linear-gradient(90deg, var(--blue-deep) 0%, var(--blue) 100%);
 
         th {
             font-size: 14px;
             font-weight: 400;
-            color: #9eaacc;
+            color: var(--faint);
             text-align: flex-start;
             text-transform: uppercase;
         }
@@ -64,7 +64,7 @@
     tbody {
         tr {
             &:nth-child(2n) {
-                background-color: #263163;
+                background-color: rgba(16, 19, 43, 0.85);
             }
         }
     }
@@ -79,7 +79,7 @@
 
     p {
         font-size: 16px;
-        color: #9eaacc;
+        color: var(--faint);
     }
 
     input {
@@ -87,7 +87,7 @@
         text-align: center;
 
         &::placeholder {
-            color: #ffffff;
+            color: var(--ink);
         }
     }
 

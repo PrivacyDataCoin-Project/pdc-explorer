@@ -2,11 +2,11 @@
     padding: 8px 15px;
     background-color: #7694fe1a;
     border-radius: 5px;
-    color: #9eaacc;
+    color: var(--faint);
     font-size: 14px;
 
     &::placeholder {
-        color: #9eaacc;
+        color: var(--faint);
     }
 
     &::-webkit-outer-spin-button,

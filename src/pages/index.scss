@@ -1,3 +1,20 @@
+:root {
+    --bg: #05060d;
+    --side: #07091a;
+    --card: #10132b;
+    --ink: #f4f6ff;
+    --muted: #d5daf2;
+    --faint: #b7bdd6;
+    --blue: #1e30f3;
+    --blue-deep: #121d92;
+    --cyan: #3bc7ff;
+    --pink: #e21e80;
+    --line: rgba(255, 255, 255, 0.16);
+    --sans: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+    --display: Montserrat, "Plus Jakarta Sans", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -5,9 +22,9 @@
     border: none;
     outline: none;
     transition: all 0.3s;
-    font-family: "Open Sans", sans-serif;
+    font-family: var(--sans);
     line-height: 100%;
-    color: #ffffff;
+    color: var(--ink);
 }
 
 #__next {
@@ -19,23 +36,34 @@
 body {
     min-height: 100vh;
     transition: none;
-    background: radial-gradient(circle at 50% 2%,#365099 0%,#213069 15%,#091233 39%);
+    background:
+        radial-gradient(900px 420px at 100% -10%, rgba(30, 48, 243, 0.28), transparent 55%),
+        radial-gradient(700px 380px at 0% 30%, rgba(226, 30, 128, 0.12), transparent 50%),
+        var(--bg);
     background-repeat: no-repeat;
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #fff;
 }
 
 h2 {
     font-size: 28px;
-    font-weight: 300;
 }
 
 h3 {
     font-size: 24px;
-    font-weight: 300;
 }
 
 h4 {
     font-size: 20px;
-    font-weight: 400;
+    font-weight: 600;
 }
 
 p, a {
@@ -44,13 +72,21 @@ p, a {
 
 a {
     text-decoration: none;
-    color: #68a1ff;
+    color: var(--cyan);
+}
+
+a:hover {
+    color: #fff;
 }
 
 button {
     cursor: pointer;
+    font-family: var(--sans);
 }
 
+code, pre, .mono {
+    font-family: var(--mono);
+}
 
 ::-webkit-scrollbar {
     -webkit-appearance: none;
@@ -59,55 +95,12 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: #32439f;
+    background-color: var(--blue);
     border-radius: 10px;
-    border: 1px solid #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 ::-webkit-scrollbar-track {
     border-radius: 10px;
-    background-color: #fff;
-}
-
-
-@font-face {
-    font-family: 'Open Sans';
-    src: url(../assets/fonts/OpenSans/OpenSans-Light.ttf) format("opentype");
-    font-weight: 300;
-}
-
-@font-face {
-    font-family: 'Open Sans';
-    src: url(../assets/fonts/OpenSans/OpenSans-Regular.ttf) format("opentype");
-    font-weight: 400;
-}
-
-@font-face {
-    font-family: 'Open Sans';
-    src: url(../assets/fonts/OpenSans/OpenSans-Medium.ttf) format("opentype");
-    font-weight: 500;
-}
-
-@font-face {
-    font-family: 'Open Sans';
-    src: url(../assets/fonts/OpenSans/OpenSans-SemiBold.ttf) format("opentype");
-    font-weight: 600;
-}
-
-@font-face {
-    font-family: 'Open Sans';
-    src: url(../assets/fonts/OpenSans/OpenSans-Bold.ttf) format("opentype");
-    font-weight: 700;
-}
-
-@font-face {
-    font-family: 'Open Sans';
-    src: url(../assets/fonts/OpenSans/OpenSans-ExtraBold.ttf) format("opentype");
-    font-weight: 800;
-}
-
-@font-face {
-    font-family: "Inconsolata";
-    src: url(../assets/fonts/Inconsolata/Inconsolata-Regular.ttf) format("opentype");
-    font-weight: 400;
+    background-color: var(--side);
 }

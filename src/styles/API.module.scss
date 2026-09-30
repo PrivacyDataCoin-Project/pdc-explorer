@@ -5,7 +5,7 @@
         align-items: center;
 
         > p {
-            color: #9eaacc;
+            color: var(--faint);
         }
     }
 
@@ -23,7 +23,7 @@
 
             .api__item__title {
                 padding: 18px 20px;
-                background: linear-gradient(to right,#1b3a8a,#32439f);
+                background: linear-gradient(90deg, var(--blue-deep) 0%, var(--blue) 100%);
 
                 > h3 {
                     font-size: 21px;
@@ -41,7 +41,7 @@
                     align-items: center;
 
                     &:nth-child(2n) {
-                        background-color: #263163;
+                        background-color: rgba(16, 19, 43, 0.85);
                     }
 
                     > :first-child {
@@ -54,7 +54,7 @@
                         }
 
                         a {
-                            color: #68a1ff;
+                            color: var(--cyan);
                         }
                     }   
                     
