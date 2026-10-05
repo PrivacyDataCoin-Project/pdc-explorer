@@ -16,6 +16,7 @@ export async function getMainPageProps() {
     let info: Info | null = null;
     let latestBlocks: Block[] = [];
     let explorerStatus: "online" | "offline" | "syncing" = "offline";
+    let daemonVersion: string | null = null;
     let txPoolElements: PoolElement[] = [];
     
     try {
@@ -49,10 +50,15 @@ export async function getMainPageProps() {
 
 
         explorerStatus = status?.data?.explorer_status || "offline";
+        const rawVersion = status?.data?.daemon_version;
+        daemonVersion = explorerStatus !== "offline" && typeof rawVersion === "string" && rawVersion.trim()
+            ? rawVersion.trim()
+            : null;
 
     } catch (error) {
         console.error("Error fetching explorer status:", error);
         explorerStatus = "offline";
+        daemonVersion = null;
     }
 
     try {
@@ -88,6 +94,7 @@ export async function getMainPageProps() {
         props: {
             visibilityInfo,
             explorerStatus,
+            daemonVersion,
             info,
             latestBlocks,
             txPoolElements,

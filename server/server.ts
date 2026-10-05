@@ -8,7 +8,7 @@ import path from "path";
 import initDB from "./database/initdb";
 import sequelize from "./database/sequelize";
 import { log, config, PDC_ASSET_ID, parseComment, parseTrackingKey, decodeString, nativeCoinAsset } from "./utils/utils";
-import { blockInfo, lastBlock, setLastBlock, state, setState, setBlockInfo, PriceData } from "./utils/states";
+import { blockInfo, lastBlock, setLastBlock, state, setState, setBlockInfo, PriceData, readDaemonVersion } from "./utils/states";
 import { emitSocketInfo, getBlocksDetails, getMainBlockDetails, getTxPoolDetails, getVisibilityInfo } from "./utils/methods";
 import AltBlock from "./schemes/AltBlock";
 import Transaction from "./schemes/Transaction";
@@ -1346,6 +1346,7 @@ async function waitForDb() {
             success: true,
             data: {
                 explorer_status: state.explorer_status,
+                daemon_version: state.explorer_status === "offline" ? null : (state.daemon_version ?? null),
             }
         });
     }));
@@ -1906,16 +1907,19 @@ async function waitForDb() {
         // chech explorer status
 
         const infoResponse = await get_info().then(r => r.data).catch(_ => null);
+        const daemonVersion = readDaemonVersion(infoResponse);
 
         if (!infoResponse || !infoResponse?.result?.height) {
             setState({
                 ...state,
-                explorer_status: "offline"
+                explorer_status: "offline",
+                daemon_version: undefined,
             })
         } else {
             setState({
                 ...state,
-                explorer_status: "online"
+                explorer_status: "online",
+                daemon_version: daemonVersion,
             });
         }
 
@@ -1960,12 +1964,15 @@ async function waitForDb() {
 
                 const pdcBurned = pdcBurnedBig.div(new BigNumber(10).pow(12)).toNumber();
 
+                const refreshedVersion = readDaemonVersion(response.data);
+
                 setState({
                     ...state,
                     countAliasesServer: response.data.result.alias_count,
                     countAltBlocksServer: response.data.result.alt_blocks_count,
                     countTrPoolServer: response.data.result.tx_pool_size,
                     pdcBurned,
+                    daemon_version: state.explorer_status === "offline" ? undefined : (refreshedVersion ?? state.daemon_version),
                 });
 
                 if (!state.statusSyncPool) {

@@ -48,6 +48,13 @@
                     border-radius: 50%;
                 }
             }
+
+            .daemon__version {
+                color: var(--ink);
+                font-size: 14px;
+                font-weight: 500;
+                white-space: nowrap;
+            }
         }
 
         @media screen and (max-width: 991px) {

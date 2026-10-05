@@ -50,6 +50,7 @@ export interface State {
     }
     pdcBurned?: number;
     explorer_status: "online" | "offline" | "syncing";
+    daemon_version?: string;
 }
 
 export let state: State = {
@@ -71,4 +72,11 @@ export function setState(newState: State) {
 
 export function setLastBlock(lastBlock_: ILastBlock) {
     lastBlock = lastBlock_;
+}
+
+export function readDaemonVersion(payload: { result?: { version?: unknown } } | null | undefined): string | undefined {
+    const version = payload?.result?.version;
+    if (typeof version !== "string") return undefined;
+    const trimmed = version.trim();
+    return trimmed || undefined;
 }
