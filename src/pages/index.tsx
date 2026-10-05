@@ -23,9 +23,8 @@ export interface MainPageProps {
 }
 
 function formatDaemonLabel(version: string) {
-    const trimmed = version.trim();
-    if (/^pdcd\b/i.test(trimmed)) return trimmed;
-    return `PDCD ${trimmed}`;
+    const trimmed = version.trim().replace(/^pdcd\b\s*/i, "");
+    return `Daemon version ${trimmed}`;
 }
 
 function versionForStatus(status: ExplorerStatusType, version: unknown): string | null {
