@@ -92,7 +92,7 @@ function MainPage({ visibilityInfo: fetchedVisibilityInfo, explorerStatus: ssrEx
                                 <span className={styles["status__item"]} /> {explorerStatus}
                             </span>
                             {daemonVersion &&
-                                <span className={styles["daemon__version"]}>{formatDaemonLabel(daemonVersion)}</span>
+                                <span className={classes(styles["daemon__version"], styles["explorer__status"])}>{formatDaemonLabel(daemonVersion)}</span>
                             }
                         </p>
                         <p className={styles["info__top__daemon_item"]}>Default network fee: 0,01</p>
