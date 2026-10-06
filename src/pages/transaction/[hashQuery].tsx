@@ -158,7 +158,7 @@ function Transaction({
             />
             <StatsPanel noStats={true} visibilityInfo={visibilityInfo} fetchedInfo={info} />
 
-            {transactionInfo?.confirmations ? <>
+            {transactionInfo ? <>
                 <div className={styles["transaction__info"]}>
                     <h2>Transaction</h2>
                     <table>
