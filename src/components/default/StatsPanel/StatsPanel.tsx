@@ -31,6 +31,9 @@ function StatsPanel(props: { visibilityInfo?: VisibilityInfo | null, fetchedInfo
         };
     }, []);
 
+    const reportedVersion = typeof (info as Info & { version?: unknown } | null)?.version === "string"
+        ? (info as Info & { version?: string }).version!.trim().replace(/^pdcd\b\s*/i, "").replace(/\[\]$/, "")
+        : "";
     const chainHeight = info?.height || 0;
     const indexedHeight = info?.database_height || 0;
     const infoHeight = info ? (Utils.formatNumber(chainHeight, 0) || "...") : "...";
@@ -71,7 +74,9 @@ function StatsPanel(props: { visibilityInfo?: VisibilityInfo | null, fetchedInfo
         {
             label: "Block reward",
             value: `${NETWORK.blockReward} PDC`,
-            hint: `${state.netMode === "TEST" ? "Testnet" : "Mainnet"} · ${NETWORK.release}`,
+            hint: reportedVersion
+                ? `${state.netMode === "TEST" ? "Testnet" : "Mainnet"} · ${reportedVersion}`
+                : (state.netMode === "TEST" ? "Testnet" : "Mainnet"),
             tone: "gold",
         },
     ];
