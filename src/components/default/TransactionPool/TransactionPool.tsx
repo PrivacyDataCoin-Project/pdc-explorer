@@ -90,7 +90,7 @@ function TransactionPool({
             <div className={styles["transation_pool__title"]}>
                 <h3>Transaction Pool</h3>
                 <Button 
-                    style={ turnedOn ? { color: "#ff5252" } : { color: "#00c853" }}
+                    style={ turnedOn ? { color: "var(--pink)" } : { color: "var(--live)" }}
                     onClick={() => setTurnedOn(!turnedOn)}
                 >
                     {turnedOn ? "TURN OFF" : "TURN ON"}

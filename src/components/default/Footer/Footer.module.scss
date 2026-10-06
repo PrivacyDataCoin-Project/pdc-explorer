@@ -18,11 +18,12 @@
     .footer__copyright {
         p {
             color: var(--font-dimmed-color);
-            font-size: 16px;
+            font-size: 13px;
             text-align: center;
         }
 
         .genesis {
+            font-family: var(--mono);
             font-size: 12px;
             word-break: break-all;
             max-width: 720px;
@@ -38,7 +39,7 @@
         flex-wrap: wrap;
 
         > a {
-            font-size: 16px;
+            font-size: 13px;
 
             &.footer__ref_selected {
                 color: var(--footer-selected-link);

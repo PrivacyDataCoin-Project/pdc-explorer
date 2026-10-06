@@ -1,7 +1,7 @@
 .transaction_pool {
     background-color: var(--card);
     border: 1px solid var(--line);
-    border-radius: 10px;
+    border-radius: 16px;
     overflow: hidden;
 
     .transation_pool__title {
@@ -34,8 +34,8 @@
         align-items: center;
 
         > p {
-            font-size: 20px;
-            font-weight: 300;
+            font-size: 14px;
+            font-weight: 400;
             color: var(--faint);
         }
     }

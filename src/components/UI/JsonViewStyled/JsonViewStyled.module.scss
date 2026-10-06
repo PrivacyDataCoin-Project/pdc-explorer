@@ -14,12 +14,13 @@
     }
 
     span {
-        font-family: "Inconsolata";
+        font-family: var(--mono);
+        line-height: 1.45;
         font-size: 13px;
         font-weight: 400;
     }
 }
 
 .json__number {
-    color: #009688;
+    color: var(--live);
 }

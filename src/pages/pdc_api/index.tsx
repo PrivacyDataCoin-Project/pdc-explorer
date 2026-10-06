@@ -161,8 +161,8 @@ function API() {
                 burgerOpened={burgerOpened} 
                 setBurgerOpened={setBurgerOpened} 
             />
-            <div className={styles["api__title"]}>
-                <p>API Documentation</p>
+            <div className={styles.head}>
+                <h2>API</h2>
             </div>
             <div className={styles["api__items"]}>
                 <APIItem title="How to use" values={howToUseValues} />

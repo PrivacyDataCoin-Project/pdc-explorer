@@ -29,7 +29,7 @@
         font-size: 13px;
         line-height: 1.4;
         white-space: pre-wrap;
-        background-color: #0c1845;
+        background-color: var(--side);
         border-radius: 10px;
         padding: 20px;
     }
@@ -37,15 +37,19 @@
 
 .block {
     .block__transactions {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        overflow: hidden;
+
         h2 {
-            height: 45px;
+            height: auto;
+            padding: 16px 20px;
             display: flex;
             align-items: center;
-        }
-
-        > div {
-            border-radius: 10px;
-            overflow: hidden;
+            font-size: 13px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
         }
 
         td {
@@ -64,7 +68,8 @@
     .block__table__hash {
         overflow: hidden;
         text-overflow: ellipsis;
-        font-size: 13px;
+        font-family: var(--mono);
+        font-size: 12px;
         display: block;
 
         @media screen and (max-width: 900px) {
@@ -102,8 +107,22 @@
                 }
             }
 
+            > h2 {
+                font-size: 13px;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+            }
+
+            > div h2 {
+                font-size: 28px;
+                letter-spacing: -0.03em;
+                text-transform: none;
+            }
+
             p {
                 color: var(--faint);
+                font-family: var(--mono);
+                font-size: 12px;
                 word-break: break-all;
                 line-height: 1.4;
             }
@@ -111,6 +130,10 @@
 
         .block__info__table {
             display: flex;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            background: var(--card);
 
             .block__info__type {
                 padding: 2px 12px;
@@ -118,11 +141,13 @@
                 font-size: 14px;
 
                 &.type__pos {
-                    background-color: var(--blue);
+                    color: #9af6cf;
+                    background: rgba(62, 224, 160, 0.12);
                 }
 
                 &.type__pow {
-                    background-color: #47effbb3;
+                    color: #b9d4ff;
+                    background: rgba(30, 48, 243, 0.28);
                 }
             }
 
@@ -150,6 +175,11 @@
                         font-size: 13px;
                         white-space: nowrap;
                         line-height: 1.4;
+
+                        &:last-child {
+                            font-family: var(--mono);
+                            font-size: 12px;
+                        }
                     }
 
                     &:nth-child(2n + 1) {

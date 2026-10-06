@@ -74,6 +74,10 @@ h4 {
     font-weight: 600;
 }
 
+p, a, td, th, button, input {
+    line-height: 1.4;
+}
+
 p, a {
     font-size: 14px;
 }
@@ -94,6 +98,12 @@ button {
 
 code, pre, .mono {
     font-family: var(--mono);
+}
+
+.leaflet-container,
+.leaflet-control {
+    font-family: var(--sans);
+    color: var(--ink);
 }
 
 ::-webkit-scrollbar {
