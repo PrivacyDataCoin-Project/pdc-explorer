@@ -12,6 +12,8 @@ import Block, { ExplorerStatusType } from "@/interfaces/state/Block";
 import { GetServerSideProps } from "next";
 import { getMainPageProps } from "@/utils/ssr";
 import { classes } from "@/utils/utils";
+import NetworkBoard from "@/components/default/NetworkBoard/NetworkBoard";
+import NodeMap from "@/components/default/NodeMap/NodeMap";
 export interface MainPageProps {
     visibilityInfo: VisibilityInfo | null;
     isOnline: boolean;
@@ -84,7 +86,8 @@ function MainPage({ visibilityInfo: fetchedVisibilityInfo, explorerStatus: ssrEx
             />
             <InfoTopPanel
                 burgerOpened={burgerOpened}
-                title="Blockchain"
+                title="Dashboard"
+                hideSearch
                 content={
                     <div className={styles["info__top__daemon"]}>
                         <p className={styles["info__top__daemon_item"]}>Explorer state:
@@ -104,6 +107,17 @@ function MainPage({ visibilityInfo: fetchedVisibilityInfo, explorerStatus: ssrEx
             <LatestBlocks
                 fetchedLatestBlocks={latestBlocks}
                 fetchedInfo={info}
+                beforeTable={
+                    <>
+                        <NetworkBoard
+                            visibilityInfo={visibilityInfo}
+                            fetchedInfo={info}
+                            fetchedBlocks={latestBlocks}
+                            mempoolCount={txPoolElements.length}
+                        />
+                        <NodeMap />
+                    </>
+                }
             />
             <TransactionPool
                 fetchedTxPoolElements={txPoolElements}

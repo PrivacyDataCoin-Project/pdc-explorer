@@ -1,0 +1,141 @@
+.panel {
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--card);
+    border: 1px solid var(--line);
+}
+
+.head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: baseline;
+    margin-bottom: 12px;
+
+    h3 {
+        font-size: 13px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    p {
+        color: var(--faint);
+        font-size: 12px;
+    }
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+
+    div {
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    span {
+        color: var(--faint);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    strong {
+        font-size: 20px;
+        letter-spacing: -0.03em;
+    }
+}
+
+.body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 12px;
+    min-height: 420px;
+}
+
+.map {
+    height: 420px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #07091a;
+    border: 1px solid var(--line);
+
+    :global(.leaflet-tile-pane) {
+        filter: invert(1) hue-rotate(180deg) saturate(0.35) brightness(0.85) contrast(0.95);
+    }
+
+    :global(.leaflet-bar) {
+        border: 1px solid var(--line);
+        box-shadow: none;
+    }
+
+    :global(.leaflet-bar a) {
+        background: #10132b;
+        color: #e8eef8;
+        border-bottom-color: var(--line);
+    }
+
+    :global(.leaflet-bar a:hover) {
+        background: #172033;
+        color: #fff;
+    }
+}
+
+.countries {
+    padding: 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: auto;
+
+    > p {
+        color: var(--faint);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    > span {
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    div {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: baseline;
+    }
+
+    span {
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    strong {
+        font-size: 14px;
+    }
+}
+
+@media screen and (max-width: 900px) {
+    .head,
+    .body,
+    .stats {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+    }
+
+    .map {
+        height: 320px;
+    }
+}

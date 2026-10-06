@@ -72,10 +72,14 @@ function ChartPage() {
         async function fetchChart() {
             if (!chartId) return;
             setLoading(true);
-            const result = await Utils.fetchChartInfo(chartId, 0);
-            setLoading(false);
-            if (!result) return;
-            setChartSeries(result);
+            try {
+                const result = await Utils.fetchChartInfo(chartId, 0);
+                if (result) setChartSeries(result);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
         }
 
         if (!(chartId && chartRequestNames[chartId])) {
@@ -94,9 +98,14 @@ function ChartPage() {
             />
             <InfoTopPanel
                 burgerOpened={burgerOpened}
-                title="Charts"
+                title={chartsInfo[chartId || ""]?.title || "Charts"}
                 back
+                hideSearch
             />
+            <div className={styles.head}>
+                <h2>{chartsInfo[chartId || ""]?.title || "Chart"}</h2>
+                <p>{chartsInfo[chartId || ""]?.yAxisTitle || ""}</p>
+            </div>
             <div className={styles["chart_page__chart__wrapper"]}>
                 {
                     loading ?
@@ -113,27 +122,45 @@ function ChartPage() {
                                 ...chartOptions,
                                 navigator: {
                                     enabled: true,
-                                    maskFill: "rgba(102, 133, 194, 0.3)",
-                                    maskInside: true
+                                    maskFill: "rgba(59, 199, 255, 0.16)",
+                                    maskInside: true,
+                                    outlineColor: "rgba(255, 255, 255, 0.08)",
+                                    handles: {
+                                        backgroundColor: "#3bc7ff",
+                                        borderColor: "#121d92",
+                                    },
+                                    series: {
+                                        color: "#3bc7ff",
+                                        lineColor: "#3bc7ff",
+                                    },
+                                    xAxis: {
+                                        labels: {
+                                            style: { color: chartFontColor, fontSize: "11px" },
+                                        },
+                                        gridLineColor: "transparent",
+                                    },
+                                },
+                                scrollbar: {
+                                    enabled: false,
                                 },
                                 series: chartSeries.map((e, i) => ({
-                                    type: "line",
+                                    type: i === 0 ? "area" : "line",
+                                    color: ["#3bc7ff", "#7aa2ff", "#3ee0a0"][i] || "#3bc7ff",
                                     turboThreshold: 0,
                                     data: e,
                                     name: chartSeriesTitles[i],
-                                    showInNavigator: true,
+                                    showInNavigator: i === 0,
                                     dataGrouping: {
                                         enabled: true
                                     }
                                 })),
                                 title: {
-                                    ...chartOptions.title,
-                                    text: chartsInfo[chartId || ""]?.title || "",
+                                    text: undefined,
                                 },
                                 chart: {
                                     ...chartOptions.chart,
                                     className: styles["chart_page__chart"],
-                                    height: 700,
+                                    height: 560,
                                 },
                                 rangeSelector: {
                                     ...chartOptions.rangeSelector,

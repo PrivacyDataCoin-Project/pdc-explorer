@@ -1,5 +1,6 @@
 import { StoreProvider } from "@/store/store-reducer";
 import "./index.scss";
+import "leaflet/dist/leaflet.css";
 import { AppProps } from "next/app";
 import Head from "next/head";
 import NetMode from "@/interfaces/common/NetMode";
@@ -14,7 +15,7 @@ function App(data: AppCustomProps) {
   return (
     <>
       <Head>
-        <title>PDC Block Explorer</title>
+        <title>PDC Explorer</title>
         <meta
           name="description"
           content="Privacy Data Coin (PDC) block explorer. Addresses start with Px. Block reward is 1 PDC, target about 60 seconds, no premine."

@@ -27,20 +27,20 @@ function TransactionPool({
     const tableHeaders = [ "TIMESTAMP (UTC)", "AGE", "SIZE", "FEE", "HASH" ];
 
     useEffect(() => {
-        socket.on("get_transaction_pool_info", (data: string) => {
+        function onPool(data: string) {
             try {
                 const parsedData = JSON.parse(data);
-                
                 setPoolElements(parsedData);
             } catch (error) {
                 console.error(error);
             }
-        });
+        }
 
+        socket.on("get_transaction_pool_info", onPool);
         socket.emit("get-socket-pool");
 
         return () => {
-            socket.off("get_transaction_pool_info");
+            socket.off("get_transaction_pool_info", onPool);
         };
     }, []);
 
@@ -86,7 +86,7 @@ function TransactionPool({
     ]));
 
     return (
-        <div className={styles["transaction_pool"] + " custom-scroll"}>
+        <div id="mempool" className={styles["transaction_pool"] + " custom-scroll"}>
             <div className={styles["transation_pool__title"]}>
                 <h3>Transaction Pool</h3>
                 <Button 

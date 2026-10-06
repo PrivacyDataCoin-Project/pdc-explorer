@@ -17,6 +17,8 @@ import Block, { IBlock } from "./schemes/Block";
 import Alias from "./schemes/Alias";
 import Chart, { IChart } from "./schemes/Chart";
 import { get_all_pool_tx_list, get_alt_blocks_details, get_blocks_details, get_info, get_out_info, get_pool_txs_details, get_tx_details } from "./utils/pdcd";
+import { getNodeMap } from "./utils/nodeMap";
+import { getNodeHealth } from "./utils/nodeHealth";
 import { fn, literal, Op, Sequelize } from "sequelize";
 import Pool from "./schemes/Pool";
 import Asset, { IAsset } from "./schemes/Asset";
@@ -917,6 +919,22 @@ async function waitForDb() {
         exceptionHandler((_, res) => {
             blockInfo.lastBlock = lastBlock.height
             res.json(blockInfo);
+        })
+    );
+
+    app.get(
+        '/api/node_map',
+        exceptionHandler(async (_req, res) => {
+            const data = await getNodeMap();
+            res.json({ success: true, data });
+        })
+    );
+
+    app.get(
+        '/api/node_health',
+        exceptionHandler(async (_req, res) => {
+            const data = await getNodeHealth();
+            res.json({ success: true, data });
         })
     );
 

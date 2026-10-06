@@ -1,5 +1,119 @@
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.stream {
+    padding: 14px 14px 12px;
+    border-radius: 16px;
+    background: var(--card);
+    border: 1px solid var(--line);
+}
+
+.streamHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+
+    h3 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+}
+
+.liveDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--live);
+    box-shadow: 0 0 0 0 rgba(62, 224, 160, 0.7);
+    animation: livePulse 1.8s infinite;
+}
+
+.updated,
+.emptyStream {
+    color: var(--faint);
+    font-size: 12px;
+}
+
+.rail {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.blockCard {
+    flex: 0 0 168px;
+    min-height: 132px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    scroll-snap-align: start;
+
+    strong {
+        font-family: var(--display);
+        font-size: 18px;
+    }
+
+    em {
+        color: var(--cyan);
+        font-style: normal;
+        font-family: var(--mono);
+        font-size: 12px;
+    }
+
+    span {
+        color: var(--muted);
+        font-size: 12px;
+    }
+
+    &:hover {
+        color: var(--ink);
+        border-color: rgba(59, 199, 255, 0.45);
+    }
+}
+
+.pos,
+.pow {
+    align-self: flex-start;
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+}
+
+.pos {
+    color: #9af6cf;
+    background: rgba(62, 224, 160, 0.12);
+}
+
+.pow {
+    color: #b9d4ff;
+    background: rgba(30, 48, 243, 0.28);
+}
+
+@keyframes livePulse {
+    70% {
+        box-shadow: 0 0 0 8px rgba(62, 224, 160, 0);
+    }
+}
+
 .blockchain__latest_blocks {
-    background-color: #234ee21a;
+    background-color: var(--card);
+    border: 1px solid var(--line);
     border-radius: 10px;
     overflow: hidden;
 
@@ -7,7 +121,11 @@
         padding: 18px 20px;
         display: flex;
         gap: 20px;
+        align-items: center;
         white-space: nowrap;
+        font-size: 13px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
 
         .status__badge {
             background-color: #091233;

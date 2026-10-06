@@ -37,7 +37,7 @@
 
             tr {
                 &:nth-child(2n) {
-                    background-color: #234ee21a;
+                    background-color: rgba(30, 48, 243, 0.12);
                 }
 
                 &:nth-child(2n + 1) {
@@ -67,7 +67,7 @@
         gap: 13px;
 
         > :last-child {
-            background-color: #234ee21a;
+            background-color: rgba(30, 48, 243, 0.12);
             border-radius: 10px;
             overflow: hidden;
         }

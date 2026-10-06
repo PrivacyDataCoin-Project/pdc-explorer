@@ -66,7 +66,7 @@ export async function getMainPageProps() {
             const { height, database_height } = info;
             const { itemsInPage, page } = latestBlocksInitState;
 
-            const heightToRequest = Math.min(height, database_height);
+            const heightToRequest = database_height > 0 ? Math.min(height, database_height) : height;
 
             const response = await Fetch.getBlockDetails(heightToRequest - itemsInPage * page, itemsInPage);
 
@@ -217,26 +217,34 @@ export interface AliasesPageProps {
 }
 
 export async function getAliases() {
+    try {
+        const countRes = await Fetch.getAliasesCount();
+        const aliasesAmount = countRes?.aliasesAmount as number;
+        const premiumAliasesAmount = countRes?.premiumAliasesAmount as number;
 
-    const countRes = await Fetch.getAliasesCount();
-    const aliasesAmount = countRes?.aliasesAmount as number;
-    const premiumAliasesAmount = countRes?.premiumAliasesAmount as number;
+        const itemsAmount = parseInt(DEFAULT_ITEMS_ON_PAGE, 10) || 0;
+        const aliasesResp = await Fetch.getAliases(0, itemsAmount, false);
 
-    const itemsAmount = parseInt(DEFAULT_ITEMS_ON_PAGE, 10) || 0;
-    const aliasesResp = await Fetch.getAliases(0, itemsAmount, false);
-
-
-    return {
-        props: {
-            aliasesAmount,
-            premiumAliasesAmount,
-            aliases: (aliasesResp || []).map((e: any) => ({
-                alias: e.alias || "" as string, 
-                address: e.address || "" as string,
-                hasMatrixConnection: e.hasMatrixConnection || false as boolean
-            }))
-        },
-    };
+        return {
+            props: {
+                aliasesAmount,
+                premiumAliasesAmount,
+                aliases: (aliasesResp || []).map((e: any) => ({
+                    alias: e.alias || "" as string,
+                    address: e.address || "" as string,
+                    hasMatrixConnection: e.hasMatrixConnection || false as boolean
+                }))
+            },
+        };
+    } catch {
+        return {
+            props: {
+                aliasesAmount: 0,
+                premiumAliasesAmount: 0,
+                aliases: [],
+            },
+        };
+    }
 }
 
 export interface AssetsPageProps {
@@ -246,26 +254,35 @@ export interface AssetsPageProps {
 }
 
 export async function getAssets() {
-    const result = await Fetch.getAssetsCount();
-    const assetsAmount = result?.assetsAmount;
-    const whitelistedAssetsAmount = result?.whitelistedAssetsAmount;
+    try {
+        const result = await Fetch.getAssetsCount();
+        const assetsAmount = result?.assetsAmount;
+        const whitelistedAssetsAmount = result?.whitelistedAssetsAmount;
 
+        const assets = await Fetch.getWhitelistedAssets(0, parseInt(DEFAULT_ASSETS_ON_PAGE, 10), "")
 
-    const assets = await Fetch.getWhitelistedAssets(0, parseInt(DEFAULT_ASSETS_ON_PAGE, 10), "")  
+        const pdcPrice = await Utils.getPdcPrice();
 
-    const pdcPrice = await Utils.getPdcPrice();
+        assets.forEach((element: any) => {
+            if (element.asset_id === PDC_ASSET_ID) {
+                element.price = pdcPrice || null;
+            }
+        });
 
-    assets.forEach((element: any) => {
-        if (element.asset_id === PDC_ASSET_ID) {
-            element.price = pdcPrice || null;
-        }
-    });
-
-    return {
-        props: {
-            assetsAmount,
-            whitelistedAssetsAmount,
-            assets: assets || []
-        },
-    };
+        return {
+            props: {
+                assetsAmount,
+                whitelistedAssetsAmount,
+                assets: assets || []
+            },
+        };
+    } catch {
+        return {
+            props: {
+                assetsAmount: 0,
+                whitelistedAssetsAmount: 0,
+                assets: [],
+            },
+        };
+    }
 }

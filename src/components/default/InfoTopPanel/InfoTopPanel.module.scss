@@ -4,6 +4,11 @@
     align-items: center;
     justify-content: space-between;
 
+    &.compact {
+        height: auto;
+        min-height: 0;
+    }
+
     h4 {
         display: none;
         white-space: nowrap;
@@ -38,7 +43,7 @@
         > input {
             width: 100%;
             border-radius: 10px;
-            background-color: #234ee21a;
+            background-color: rgba(30, 48, 243, 0.12);
             padding-right: 50px;
         }
 

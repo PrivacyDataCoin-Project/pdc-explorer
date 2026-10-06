@@ -2,7 +2,7 @@ import { literal, Op } from "sequelize";
 import Block from "../schemes/Block";
 import axios from "axios";
 import { config, log } from "./utils";
-import { get_info, get_mining_history, getbalance } from "./pdcd";
+import { get_blocks_details, get_info, get_mining_history, getbalance } from "./pdcd";
 import BigNumber from "bignumber.js";
 import Transaction from "../schemes/Transaction";
 import Pool from "../schemes/Pool";
@@ -55,7 +55,29 @@ export async function getBlocksDetails(params: getBlocksDetailsParams) {
         limit: count
     });
 
-    return result.length > 0 ? result.map(e => e.toJSON()) : [];
+    if (result.length > 0) return result.map(e => e.toJSON());
+
+    try {
+        const response = await get_blocks_details(start, count);
+        const blocks = response.data?.result?.blocks;
+        if (!Array.isArray(blocks)) return [];
+
+        return blocks.map((block) => {
+            const isProofOfStake = String(block.type) === "0";
+            const txCount = block.tr_count ?? (Array.isArray(block.transactions_details) ? block.transactions_details.length : 0);
+            return {
+                height: block.height,
+                timestamp: isProofOfStake ? block.actual_timestamp : block.timestamp,
+                total_txs_size: block.total_txs_size,
+                tr_count: txCount,
+                tx_id: block.id,
+                type: String(block.type),
+            };
+        });
+    } catch (error) {
+        log(`getBlocksDetails daemon fallback failed: ${error instanceof Error ? error.message : String(error)}`);
+        return [];
+    }
 }
 
 export async function getVisibilityInfo() {

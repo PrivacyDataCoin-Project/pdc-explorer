@@ -13,6 +13,7 @@ interface InfoTopPanelProps {
     }
     contentNotHiding?: boolean;
     inputDefaultClosed?: boolean;
+    hideSearch?: boolean;
 }
 
 export default InfoTopPanelProps;
