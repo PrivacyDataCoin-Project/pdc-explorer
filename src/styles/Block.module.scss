@@ -176,7 +176,8 @@
                         white-space: nowrap;
                         line-height: 1.4;
 
-                        &:last-child {
+                        &:last-child,
+                        &:last-child a {
                             font-family: var(--mono);
                             font-size: 12px;
                         }
