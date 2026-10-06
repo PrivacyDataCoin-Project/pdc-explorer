@@ -62,7 +62,7 @@ function InfoTopPanel(props: InfoTopPanelProps) {
     return (
         <div 
             className={
-                `${styles.blockchain__info__top} ${className || ""} ${hideSearch ? styles.compact : ""} ${inputClosed ? styles.blockchain__input__closed : ""} ${burgerOpened ? styles.info__top__hidden : ""}`
+                `${styles.blockchain__info__top} ${className || ""} ${hideSearch || contentNotHiding ? styles.compact : ""} ${inputClosed ? styles.blockchain__input__closed : ""} ${burgerOpened ? styles.info__top__hidden : ""}`
             }
         >
 

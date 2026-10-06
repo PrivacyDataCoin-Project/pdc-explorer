@@ -1,22 +1,28 @@
 .switch {
-    width: 232px;
-    height: 34px;
-    background-color: #234EE233;
+    width: auto;
+    height: 36px;
+    padding: 3px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--line);
     display: flex;
     align-items: center;
-    border-radius: 10px;
-    
+    border-radius: 999px;
+
     .switch__item {
         height: 100%;
         flex: 1;
         display: flex;
         justify-content: center;
         align-items: center;
-        border-radius: 10px;
-
+        padding: 0 14px;
+        border-radius: 999px;
+        color: var(--faint);
+        font-size: 13px;
+        white-space: nowrap;
 
         &.switch__item_selected {
-            background-color: #1F8FEB;
+            background: var(--blue);
+            color: #fff;
         }
     }
 }

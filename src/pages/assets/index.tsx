@@ -271,6 +271,9 @@ function Assets(props: AssetsPageProps) {
                 burgerOpened={burgerOpened} 
                 setBurgerOpened={setBurgerOpened} 
             />
+            <div className={styles.head}>
+                <h2>Assets</h2>
+            </div>
             <InfoTopPanel 
                 burgerOpened={burgerOpened} 
                 title="Assets"
@@ -289,7 +292,7 @@ function Assets(props: AssetsPageProps) {
                     />
                 }
             />
-            <CommonStatsPanel pairs={statsPanelData} className={styles["assets__stats"]} />
+            <CommonStatsPanel pairs={statsPanelData} />
             <div className={styles["assets__table"]}>
                 <Table 
                     headers={tableHeaders}
