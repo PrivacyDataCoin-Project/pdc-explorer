@@ -1,7 +1,5 @@
 import styles from "@/styles/Charts.module.scss";
 import { useState, useEffect } from "react";
-import Header from "@/components/default/Header/Header";
-import InfoTopPanel from "@/components/default/InfoTopPanel/InfoTopPanel";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
 import { chartOptions } from "@/utils/constants";
@@ -11,8 +9,6 @@ import Preloader from "@/components/UI/Preloader/Preloader";
 import Link from "next/link";
 
 function Charts() {
-    const [burgerOpened, setBurgerOpened] = useState(false);
-
     const [chartsSeries, setChartsSeries] = useState<{ [key: string]: ChartSeriesElem[][] | undefined }>(
         {
             "avg-block-size": undefined,
@@ -47,108 +43,123 @@ function Charts() {
     
             const results: { title: string, data: ChartSeriesElem[][] }[] = [];
 
-            for (const title of titles) {
-                const result = await Utils.fetchChartInfo(title, offset);
-                console.log('data loaded:', title);
-                
-                if (!result) continue;
+            try {
+                for (const title of titles) {
+                    try {
+                        const result = await Utils.fetchChartInfo(title, offset);
+                        if (!result) continue;
 
-                results.push({
-                    title: title,
-                    data: result.map(
-                        series => series.filter(e => e.x > offset - chartPeriod)
-                    )
-                });
+                        results.push({
+                            title: title,
+                            data: result.map(
+                                series => series.filter(e => e.x > offset - chartPeriod)
+                            )
+                        });
+                    } catch (error) {
+                        console.error(error);
+                    }
+                }
+
+                setChartsSeries(prev => ({
+                    ...prev,
+                    ...Object.fromEntries(results.map(e => [e.title, e.data] as [string, ChartSeriesElem[][]]))
+                }))
+            } finally {
+                setLoaded(true);
             }
-
-            setChartsSeries(prev => ({ 
-                ...prev, 
-                ...Object.fromEntries(results.map(e => [e.title, e.data] as [string, ChartSeriesElem[][]] ))
-            }))
-                
-            setLoaded(true);
         }
 
         fetchCharts();
     }, [loaded]);
+
+    function latestValue(requestTitle: string) {
+        const series = chartsSeries[requestTitle]?.[0];
+        const point = series?.[series.length - 1];
+        if (!point || !Number.isFinite(point.y)) return "—";
+        const abs = Math.abs(point.y);
+        if (abs >= 1e15) return `${(point.y / 1e15).toFixed(2)} P`;
+        if (abs >= 1e12) return `${(point.y / 1e12).toFixed(2)} T`;
+        if (abs >= 1e9) return `${(point.y / 1e9).toFixed(2)} B`;
+        if (abs >= 1e6) return `${(point.y / 1e6).toFixed(2)} M`;
+        if (abs >= 1e3) return `${(point.y / 1e3).toFixed(2)} K`;
+        return Utils.formatNumber(point.y, abs < 10 ? 2 : 0);
+    }
 
     function Chart(props: { title: string, requestTitle: string, disabled?: boolean }) {
         const {
             title,
             requestTitle
         } = props;
+        const series = chartsSeries[requestTitle]?.[0];
 
         return (
             <Link href={"/chart/" + requestTitle} className={styles["charts__chart__wrapper"]} style={
                 props.disabled ? { pointerEvents: "none", opacity: 0.3 } : {}
             }>
                 <div className={styles["charts__chart__title"]}>
-                    <p>{title}</p>
+                    <div>
+                        <p>7 days</p>
+                        <h3>{title}</h3>
+                    </div>
+                    <strong>{latestValue(requestTitle)}</strong>
                 </div>
-                <HighchartsReact 
-                    highcharts={Highcharts}
-                    options={{
-                        ...chartOptions,
-                        title: {
-                            text: undefined
-                        },
-                        series: chartsSeries[requestTitle]?.map(e => ({
-                            type: "line",
-                            data: e,
-                            turboThreshold: 0,
-                            animation: false
-                        })),
-                        chart: {
-                            ...chartOptions.chart,
-                            height: 280,
-                            className: styles["charts__chart"]
-                        },
-                        tooltip: {
-                            enabled: false
-                        },
-                        legend: {
-                            enabled: false
-                        },
-                        yAxis: {
-                            ...chartOptions.yAxis,
+                {series?.length ? (
+                    <HighchartsReact
+                        highcharts={Highcharts}
+                        options={{
+                            ...chartOptions,
                             title: {
-                                text: ""
-                            }
-                        },
-                        plotOptions: {
-                            area: {
-                                lineWidth: 2,
-                                states: {
-                                    hover: {
-                                        lineWidth: 1
-                                    }
-                                },
-                                threshold: null
+                                text: undefined
                             },
-                            series: {
-                                marker: {
-                                    enabled: false
-                                }
-                            }      
-                        }
-                    }}
-                />
+                            series: [{
+                                type: "area",
+                                data: series,
+                                turboThreshold: 0,
+                                animation: { duration: 400 },
+                            }],
+                            chart: {
+                                ...chartOptions.chart,
+                                height: 210,
+                                className: styles["charts__chart"],
+                            },
+                            tooltip: {
+                                ...chartOptions.tooltip,
+                                enabled: false,
+                            },
+                            legend: {
+                                enabled: false
+                            },
+                            yAxis: {
+                                ...chartOptions.yAxis,
+                                title: {
+                                    text: ""
+                                },
+                                labels: {
+                                    enabled: false,
+                                },
+                            },
+                            xAxis: {
+                                ...chartOptions.xAxis,
+                                labels: {
+                                    enabled: false,
+                                },
+                                lineWidth: 0,
+                            },
+                        }}
+                    />
+                ) : (
+                    <p className={styles.empty}>No samples in this window</p>
+                )}
             </Link>
-            
         )
     }
 
     return (
         <div className={styles["charts"]}>
-            <Header 
-                page="Charts" 
-                burgerOpened={burgerOpened} 
-                setBurgerOpened={setBurgerOpened} 
-            />
-            <InfoTopPanel 
-                burgerOpened={burgerOpened} 
-                title="Charts" 
-            />
+            <div className={styles.head}>
+                <h2>Charts</h2>
+                <p>Last 7 days. Open a card for the full range.</p>
+            </div>
             {loaded ?
                 <div className={styles["charts__container"]}>
                     <Chart 

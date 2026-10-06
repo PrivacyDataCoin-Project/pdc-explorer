@@ -10,7 +10,7 @@ import InfoTopPanelProps from "./InfoTopPanel.props";
 import { useRouter } from 'next/router'
 
 function InfoTopPanel(props: InfoTopPanelProps) {
-    const { burgerOpened, title, content, back, className, inputParams, contentNotHiding, inputDefaultClosed } = props;
+    const { burgerOpened, title, content, back, className, inputParams, contentNotHiding, inputDefaultClosed, hideSearch } = props;
 
     const router = useRouter(); 
 
@@ -62,7 +62,7 @@ function InfoTopPanel(props: InfoTopPanelProps) {
     return (
         <div 
             className={
-                `${styles.blockchain__info__top} ${className} ${inputClosed ? styles.blockchain__input__closed : ""} ${burgerOpened ? styles.info__top__hidden : ""}`
+                `${styles.blockchain__info__top} ${className || ""} ${hideSearch || contentNotHiding ? styles.compact : ""} ${inputClosed ? styles.blockchain__input__closed : ""} ${burgerOpened ? styles.info__top__hidden : ""}`
             }
         >
 
@@ -87,7 +87,7 @@ function InfoTopPanel(props: InfoTopPanelProps) {
             
             
             
-            <div className={styles.info__top__input}>
+            {!hideSearch && <div className={styles.info__top__input}>
                 {noMatch && <p>No matching records found!</p> }
                 {!inputParams ?
                     <Input 
@@ -113,7 +113,7 @@ function InfoTopPanel(props: InfoTopPanelProps) {
                 >
                     <SearchImg />
                 </Button>
-            </div>
+            </div>}
         </div>
     )
 }

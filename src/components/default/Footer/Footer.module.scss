@@ -3,12 +3,14 @@
     --delimiter-color: rgba(255, 255, 255, 0.1);
     --footer-selected-link: #ffffffcc;
 
-    padding: 30px 35px 20px;
+    padding: 18px 0 10px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 20px;
+    justify-content: space-between;
+    gap: 16px;
     margin-top: auto;
+    flex-wrap: wrap;
     
 
     border-top: 1px solid var(--delimiter-color);
@@ -16,11 +18,12 @@
     .footer__copyright {
         p {
             color: var(--font-dimmed-color);
-            font-size: 16px;
+            font-size: 13px;
             text-align: center;
         }
 
         .genesis {
+            font-family: var(--mono);
             font-size: 12px;
             word-break: break-all;
             max-width: 720px;
@@ -28,15 +31,15 @@
     }
 
     .footer__refs {
-        width: 100%;
+        width: auto;
         display: flex;
-        justify-content: center;
+        justify-content: flex-start;
         column-gap: 20px;
         row-gap: 15px;
         flex-wrap: wrap;
 
         > a {
-            font-size: 16px;
+            font-size: 13px;
 
             &.footer__ref_selected {
                 color: var(--footer-selected-link);

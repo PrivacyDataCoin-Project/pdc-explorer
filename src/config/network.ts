@@ -28,8 +28,7 @@ export const NETWORK = {
     auditableIntegratedAddressPrefix: "aiPX",
     release: "v2.1.0",
     website: "https://privacydatacoin.com/",
-    protocolRepo: "https://github.com/PrivacyDataCoin-Project/PDC",
-    uiRepo: "https://github.com/PrivacyDataCoin-Project/pdc_ui",
+    uiRepo: "https://github.com/PrivacyDataCoin-Project/PDC/releases",
     siteRepo: "https://github.com/PrivacyDataCoin-Project/PrivacyDataCoin-Project.github.io",
 } as const;
 

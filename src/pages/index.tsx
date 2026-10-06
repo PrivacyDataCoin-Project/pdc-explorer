@@ -12,6 +12,8 @@ import Block, { ExplorerStatusType } from "@/interfaces/state/Block";
 import { GetServerSideProps } from "next";
 import { getMainPageProps } from "@/utils/ssr";
 import { classes } from "@/utils/utils";
+import NetworkBoard from "@/components/default/NetworkBoard/NetworkBoard";
+import NodeMap from "@/components/default/NodeMap/NodeMap";
 export interface MainPageProps {
     visibilityInfo: VisibilityInfo | null;
     isOnline: boolean;
@@ -22,18 +24,7 @@ export interface MainPageProps {
     daemonVersion: string | null;
 }
 
-function formatDaemonLabel(version: string) {
-    const trimmed = version.trim().replace(/^pdcd\b\s*/i, "");
-    return `Daemon version ${trimmed}`;
-}
-
-function versionForStatus(status: ExplorerStatusType, version: unknown): string | null {
-    if (status === "offline" || typeof version !== "string") return null;
-    const trimmed = version.trim();
-    return trimmed || null;
-}
-
-function MainPage({ visibilityInfo: fetchedVisibilityInfo, explorerStatus: ssrExplorerStatus, daemonVersion: ssrDaemonVersion, info, latestBlocks, txPoolElements }: MainPageProps) {
+function MainPage({ visibilityInfo: fetchedVisibilityInfo, explorerStatus: ssrExplorerStatus, info, latestBlocks, txPoolElements }: MainPageProps) {
 
 
     console.log('ssrExplorerStatus', ssrExplorerStatus);
@@ -43,7 +34,6 @@ function MainPage({ visibilityInfo: fetchedVisibilityInfo, explorerStatus: ssrEx
 
     const [visibilityInfo, setVisibilityInfo] = useState<VisibilityInfo | null>(fetchedVisibilityInfo);
     const [explorerStatus, setExplorerStatus] = useState<ExplorerStatusType>(ssrExplorerStatus);
-    const [daemonVersion, setDaemonVersion] = useState<string | null>(versionForStatus(ssrExplorerStatus, ssrDaemonVersion));
 
     useEffect(() => {
         async function fetchVisibilityInfo() {
@@ -58,11 +48,8 @@ function MainPage({ visibilityInfo: fetchedVisibilityInfo, explorerStatus: ssrEx
 
                 if (explorerStatus.success === false) {
                     setExplorerStatus("offline");
-                    setDaemonVersion(null);
                 } else {
-                    const nextStatus = explorerStatus.data.explorer_status;
-                    setExplorerStatus(nextStatus);
-                    setDaemonVersion(versionForStatus(nextStatus, explorerStatus.data.daemon_version));
+                    setExplorerStatus(explorerStatus.data.explorer_status);
                 }
 
             } catch (error) {
@@ -84,16 +71,14 @@ function MainPage({ visibilityInfo: fetchedVisibilityInfo, explorerStatus: ssrEx
             />
             <InfoTopPanel
                 burgerOpened={burgerOpened}
-                title="Blockchain"
+                title="Dashboard"
+                hideSearch
                 content={
                     <div className={styles["info__top__daemon"]}>
                         <p className={styles["info__top__daemon_item"]}>Explorer state:
                             <span className={classes(styles["explorer__status"], styles[explorerStatus])}>
                                 <span className={styles["status__item"]} /> {explorerStatus}
                             </span>
-                            {daemonVersion &&
-                                <span className={classes(styles["daemon__version"], styles["explorer__status"])}>{formatDaemonLabel(daemonVersion)}</span>
-                            }
                         </p>
                         <p className={styles["info__top__daemon_item"]}>Default network fee: 0,01</p>
                         <p className={styles["info__top__daemon_item"]}>Minimum network fee: 0,01</p>
@@ -104,6 +89,17 @@ function MainPage({ visibilityInfo: fetchedVisibilityInfo, explorerStatus: ssrEx
             <LatestBlocks
                 fetchedLatestBlocks={latestBlocks}
                 fetchedInfo={info}
+                beforeTable={
+                    <>
+                        <NetworkBoard
+                            visibilityInfo={visibilityInfo}
+                            fetchedInfo={info}
+                            fetchedBlocks={latestBlocks}
+                            mempoolCount={txPoolElements.length}
+                        />
+                        <NodeMap />
+                    </>
+                }
             />
             <TransactionPool
                 fetchedTxPoolElements={txPoolElements}

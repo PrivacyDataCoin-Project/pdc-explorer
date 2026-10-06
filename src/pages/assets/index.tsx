@@ -107,21 +107,25 @@ function Assets(props: AssetsPageProps) {
     useEffect(() => {
         async function fetchAssetsStats() {
             setLoading(true);
-            const result = await Fetch.getAssetsCount();
-            const assetsAmount = result?.assetsAmount;
-            const whitelistedAssetsAmount = result?.whitelistedAssetsAmount;
-            setAssetStats({
-                assetsAmount: 
-                    typeof assetsAmount === "number" 
-                        ? assetsAmount 
-                        : undefined,
-                whitelistedAssetsAmount: 
-                    typeof whitelistedAssetsAmount === "number" 
-                        ? whitelistedAssetsAmount 
-                        : undefined
-            })
-
-            setLoading(false)
+            try {
+                const result = await Fetch.getAssetsCount();
+                const assetsAmount = result?.assetsAmount;
+                const whitelistedAssetsAmount = result?.whitelistedAssetsAmount;
+                setAssetStats({
+                    assetsAmount:
+                        typeof assetsAmount === "number"
+                            ? assetsAmount
+                            : undefined,
+                    whitelistedAssetsAmount:
+                        typeof whitelistedAssetsAmount === "number"
+                            ? whitelistedAssetsAmount
+                            : undefined
+                })
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
         }
 
         fetchAssetsStats();
@@ -183,33 +187,48 @@ function Assets(props: AssetsPageProps) {
             const newFetchId = nanoid();
             fetchIdRef.current = newFetchId;
 
-            const result = isWhitelist 
-                ? await Fetch.getWhitelistedAssets(offset, itemsOnPageInt, inputState)  
-                : await Fetch.getAssets(offset, itemsOnPageInt, inputState);
+            let result;
+            try {
+                result = isWhitelist
+                    ? await Fetch.getWhitelistedAssets(offset, itemsOnPageInt, inputState)
+                    : await Fetch.getAssets(offset, itemsOnPageInt, inputState);
+            } catch (error) {
+                console.error(error);
+                if (newFetchId === fetchIdRef.current) setLoading(false);
+                return;
+            }
 
             if (newFetchId !== fetchIdRef.current) return;
+            if (!(result instanceof Array)) {
+                setLoading(false);
+                return;
+            }
 
-            const assetsIds = result.map((asset: any) => asset.asset_id);
+            try {
+                const assetsIds = result.map((asset: any) => asset.asset_id);
+                const assetsPriceRatesResponse = await Fetch.getAssetsPriceRates(assetsIds);
+                const assetsPriceRates = assetsPriceRatesResponse?.priceRates;
+                const pdcPrice = await Utils.getPdcPrice();
 
-            const assetsPriceRatesResponse = await Fetch.getAssetsPriceRates(assetsIds);
+                const resultAssets = result.map((resultAsset: any) => {
+                    if (assetsPriceRatesResponse?.success && pdcPrice && Array.isArray(assetsPriceRates)) {
+                        const targetAsset = assetsPriceRates.find((asset: any) => asset.asset_id === resultAsset.asset_id);
+                        if (!targetAsset) return resultAsset;
+                        return {
+                            ...resultAsset,
+                            price: parseFloat((targetAsset.rate * pdcPrice).toFixed(6)).toString(),
+                        };
+                    }
+                    return resultAsset;
+                });
 
-            const assetsPriceRates = assetsPriceRatesResponse?.priceRates;
-
-            const pdcPrice = await Utils.getPdcPrice();
-
-            const resultAssets = result.map((resultAsset:any) => {
-                if (assetsPriceRatesResponse?.success && pdcPrice) {
-                    const targetAsset = assetsPriceRates.find((asset: any)=> asset.asset_id === resultAsset.asset_id);
-                    if (!targetAsset) return resultAsset;
-                    resultAsset.price = parseFloat((targetAsset.rate * pdcPrice).toFixed(6)).toString();
-                }
-                return resultAsset
-            })
-
-            if (!resultAssets || !(resultAssets instanceof Array)) return;
-
-            fetchPdcPrice(resultAssets);
-            setLoading(false)
+                if (newFetchId !== fetchIdRef.current) return;
+                fetchPdcPrice(resultAssets);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                if (newFetchId === fetchIdRef.current) setLoading(false);
+            }
         }
         
         fetchAssets();
@@ -237,7 +256,7 @@ function Assets(props: AssetsPageProps) {
         e?.asset_id === PDC_ASSET_ID ? 
         <Link href="https://privacydatacoin.com/" target="_blank">Website</Link>
         : 
-        <Link href={`https://github.com/PrivacyDataCoin-Project/PDC`} target="_blank">Protocol</Link>
+        "—"
     ]);
 
     const statsPanelData = [
@@ -252,6 +271,9 @@ function Assets(props: AssetsPageProps) {
                 burgerOpened={burgerOpened} 
                 setBurgerOpened={setBurgerOpened} 
             />
+            <div className={styles.head}>
+                <h2>Assets</h2>
+            </div>
             <InfoTopPanel 
                 burgerOpened={burgerOpened} 
                 title="Assets"
@@ -270,7 +292,7 @@ function Assets(props: AssetsPageProps) {
                     />
                 }
             />
-            <CommonStatsPanel pairs={statsPanelData} className={styles["assets__stats"]} />
+            <CommonStatsPanel pairs={statsPanelData} />
             <div className={styles["assets__table"]}>
                 <Table 
                     headers={tableHeaders}

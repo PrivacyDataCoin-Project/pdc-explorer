@@ -1,0 +1,55 @@
+.frame {
+    min-height: 100vh;
+    display: flex;
+    align-items: stretch;
+}
+
+.main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 18px 22px 8px;
+}
+
+.page {
+    flex: 1;
+}
+
+.menu {
+    display: none;
+}
+
+.backdrop {
+    display: none;
+}
+
+@media screen and (max-width: 960px) {
+    .main {
+        padding: 14px 14px 8px;
+    }
+
+    .menu {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        height: 36px;
+        padding: 0 12px;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--ink);
+        font-size: 13px;
+    }
+
+    .backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 15;
+        background: rgba(0, 0, 0, 0.45);
+        border: 0;
+        padding: 0;
+    }
+}

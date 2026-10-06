@@ -193,11 +193,11 @@ class Utils {
         if (!(typeof result === "object")) return null;
 
         const newTransactionInfo: TransactionInfo = {
-            hash: result.tx_id || "",
+            hash: result.tx_id || result.id || "",
             amount: Utils.toShiftedNumber(result.amount || "0", 12),
             fee: Utils.toShiftedNumber(result.fee || "0", 12),
             size: result.blob_size || "0",
-            confirmations: parseInt(result.keeper_block, 10) > 0 ? parseInt(result.last_block, 10) - parseInt(result.keeper_block, 10) : 0,
+            confirmations: parseInt(String(result.keeper_block), 10) > 0 ? parseInt(String(result.last_block), 10) - parseInt(String(result.keeper_block), 10) : 0,
             publicKey: result.pub_key || "-",
             mixin: "-",
             extraItems: [],
@@ -286,8 +286,24 @@ class Utils {
             orphan: result.is_orphan || false,
             baseReward: Utils.toShiftedNumber(result.base_reward || "0", 12),
             transactionsFee: Utils.toShiftedNumber(result.total_fee || "0", 12),
-            rewardPenalty: "",
-            reward: Utils.toShiftedNumber(result.summary_reward || "0", 12),
+            // Post-Zarcanum daemons often report summary_reward=0 and penalty=base+fee.
+            // Prefer summary_reward when present; otherwise use base_reward + total_fee.
+            rewardPenalty: (() => {
+                const summary = BigInt(String(result.summary_reward ?? "0") || "0");
+                const penalty = BigInt(String(result.penalty ?? "0") || "0");
+                const base = BigInt(String(result.base_reward ?? "0") || "0");
+                const fee = BigInt(String(result.total_fee ?? "0") || "0");
+                // Ignore bogus full-penalty reports (penalty == base+fee while summary is 0)
+                if (summary === BigInt(0) && penalty === base + fee && penalty > BigInt(0)) return "";
+                return penalty > BigInt(0) ? Utils.toShiftedNumber(penalty.toString(), 12) : "";
+            })(),
+            reward: (() => {
+                const summary = BigInt(String(result.summary_reward ?? "0") || "0");
+                if (summary > BigInt(0)) return Utils.toShiftedNumber(summary.toString(), 12);
+                const base = BigInt(String(result.base_reward ?? "0") || "0");
+                const fee = BigInt(String(result.total_fee ?? "0") || "0");
+                return Utils.toShiftedNumber((base + fee).toString(), 12);
+            })(),
             totalBlockSize: result.block_tself_size || undefined,
             effectiveTxsMedian: undefined,
             blockFeeMedian: Utils.toShiftedNumber(result.this_block_fee_median || "0", 12),

@@ -1,0 +1,157 @@
+.board {
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--card);
+    border: 1px solid var(--line);
+}
+
+.head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: baseline;
+    margin-bottom: 14px;
+
+    h3 {
+        font-size: 13px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    p {
+        color: var(--faint);
+        font-size: 12px;
+    }
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 1.1fr) minmax(280px, 1fr);
+    gap: 18px;
+}
+
+.charts {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-width: 0;
+}
+
+.donut {
+    position: relative;
+    width: 116px;
+    height: 116px;
+    flex-shrink: 0;
+
+    svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+    }
+}
+
+.track,
+.arc {
+    fill: none;
+    stroke-width: 8;
+}
+
+.track {
+    stroke: rgba(255, 255, 255, 0.08);
+}
+
+.arc {
+    stroke-linecap: round;
+}
+
+.donutLabel {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+
+    strong {
+        font-size: 16px;
+    }
+
+    span {
+        color: var(--faint);
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+}
+
+.legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    p {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    i {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+}
+
+.cyan {
+    background: #3bc7ff;
+}
+
+.green {
+    background: #3ee0a0;
+}
+
+.facts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.fact {
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    span {
+        color: var(--faint);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    strong {
+        font-size: 16px;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+    }
+}
+
+@media screen and (max-width: 980px) {
+    .layout,
+    .charts {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .head {
+        flex-direction: column;
+    }
+}

@@ -105,6 +105,14 @@ class Fetch {
         return await fetch(this.proxyPath + "/get_aliases_count").then(res => res.json());
     }
 
+    static async getNodeMap() {
+        return await fetch(this.proxyPath + "/node_map").then(res => res.json());
+    }
+
+    static async getNodeHealth() {
+        return await fetch(this.proxyPath + "/node_health").then(res => res.json());
+    }
+
     static async getTxPoolInfo(count: number) {
         return await fetch(this.proxyPath + `/get_tx_pool_details/${encodeURIComponent(count)}`).then(res => res.json());
     }

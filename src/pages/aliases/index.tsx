@@ -47,26 +47,30 @@ function Aliases(props: AliasesPageProps) {
         fetchIdRef.current = newFetchId;
 
         setLoading(true);
-        const result = await Fetch.getAliases(
-            (currentPage - 1) * itemsAmount,
-            itemsAmount,
-            isPremiumOnly,
-            searchState || undefined,
-        );
-        setLoading(false)
+        try {
+            const result = await Fetch.getAliases(
+                (currentPage - 1) * itemsAmount,
+                itemsAmount,
+                isPremiumOnly,
+                searchState || undefined,
+            );
 
-        if (newFetchId !== fetchIdRef.current) return;
-
-        if (result.sucess === false) return;
-        if (!(result instanceof Array)) return;
-        if (isInMatrix) return;
-        setAliases(
-            result.map((e: any) => ({
-                alias: e.alias || "",
-                address: e.address || "",
-                hasMatrixConnection: e.hasMatrixConnection || false
-            }))
-        );
+            if (newFetchId !== fetchIdRef.current) return;
+            if (result.sucess === false) return;
+            if (!(result instanceof Array)) return;
+            if (isInMatrix) return;
+            setAliases(
+                result.map((e: any) => ({
+                    alias: e.alias || "",
+                    address: e.address || "",
+                    hasMatrixConnection: e.hasMatrixConnection || false
+                }))
+            );
+        } catch (error) {
+            console.error(error);
+        } finally {
+            if (newFetchId === fetchIdRef.current) setLoading(false);
+        }
     }, [itemsOnPage, page, searchState, isPremiumOnly, isInMatrix]);
 
     const fetchMatrixAliases = useCallback(async () => {
@@ -181,6 +185,9 @@ function Aliases(props: AliasesPageProps) {
                 burgerOpened={burgerOpened} 
                 setBurgerOpened={setBurgerOpened} 
             />
+            <div className={styles.head}>
+                <h2>Aliases</h2>
+            </div>
             <InfoTopPanel 
                 burgerOpened={burgerOpened} 
                 title="Aliases" 
@@ -199,7 +206,7 @@ function Aliases(props: AliasesPageProps) {
                     />
                 }
             />
-            <CommonStatsPanel pairs={statsPanelData} className={styles["aliases__stats"]} />
+            <CommonStatsPanel pairs={statsPanelData} />
             <div className={`${styles["aliases__table"]} custom-scroll`}>
                 <Table 
                     isLoading={isLoading}

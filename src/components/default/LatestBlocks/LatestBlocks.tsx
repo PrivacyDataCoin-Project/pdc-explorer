@@ -5,7 +5,7 @@ import Info from "@/interfaces/state/Info";
 import Fetch from "@/utils/methods";
 import Utils, { classes } from "@/utils/utils";
 import styles from "./LatestBlocks.module.scss";
-import { useState, useEffect, useRef } from "react";
+import { ReactNode, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import BigNumber from "bignumber.js";
 import InfoIcon from "@/assets/images/UI/info.svg";
@@ -15,7 +15,31 @@ export const latestBlocksInitState = {
     page: 1,
 }
 
-function LatestBlocks({ fetchedInfo, fetchedLatestBlocks }: { fetchedInfo: Info | null, fetchedLatestBlocks: Block[] }) {
+function formatSize(bytes: number) {
+    if (!bytes) return "0 B";
+    if (bytes < 1024) return `${bytes} B`;
+    return `${(bytes / 1024).toFixed(2)} kB`;
+}
+
+function formatAge(timestamp: number, now: number) {
+    const elapsed = Math.max(0, Math.floor(now / 1000 - timestamp));
+    const hours = Math.floor(elapsed / 3600);
+    const minutes = Math.floor((elapsed % 3600) / 60);
+    const seconds = elapsed % 60;
+    const pad = (value: number) => value.toString().padStart(2, "0");
+    if (hours > 0) return `${hours}:${pad(minutes)}:${pad(seconds)}`;
+    return `${minutes}:${pad(seconds)}`;
+}
+
+function LatestBlocks({
+    fetchedInfo,
+    fetchedLatestBlocks,
+    beforeTable,
+}: {
+    fetchedInfo: Info | null,
+    fetchedLatestBlocks: Block[],
+    beforeTable?: ReactNode,
+}) {
     const [info, setInfo] = useState<Info | null>(fetchedInfo);
     const prevTxCount = useRef<number>(0);
     const [headerStatus, setHeaderStatus] = useState<JSX.Element | null>(null);
@@ -71,15 +95,18 @@ function LatestBlocks({ fetchedInfo, fetchedLatestBlocks }: { fetchedInfo: Info 
     useEffect(() => {
         async function fetchBlocks() {
             try {
-                setHeaderStatus(<>Scanning new transactions...</>);
-                await new Promise(resolve => setTimeout(resolve, 1000));
-
                 const items = parseInt(itemsOnPage, 10) || 0;
                 const pageNumber = parseInt(page, 10) || 0;
-                if (pageNumber === 0 || !info) return;
+                if (pageNumber === 0 || !info) {
+                    setHeaderStatus(null);
+                    return;
+                }
+
+                setHeaderStatus(<>Scanning new transactions...</>);
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 const { height, database_height } = info;
 
-                const heightToRequest = Math.min(height, database_height);
+                const heightToRequest = database_height > 0 ? Math.min(height, database_height) : height;
                 const result = await Fetch.getBlockDetails(heightToRequest - items * pageNumber, items);
                 if (result.success === false || !(result instanceof Array)) return;
 
@@ -126,13 +153,14 @@ function LatestBlocks({ fetchedInfo, fetchedLatestBlocks }: { fetchedInfo: Info 
                 {` (${e.type})`}
             </p>,
             Utils.formatTimestampUTC(e.timestamp),
-            Utils.timeElapsedString(e.timestamp),
+            <span suppressHydrationWarning>{Utils.timeElapsedString(e.timestamp)}</span>,
             `${e.size} bytes`,
             e.transactions?.toString() || "0",
             <AliasText href={hashLink}>{hash}</AliasText>
         ]
     });
 
+    const [now, setNow] = useState(() => Date.now());
     const [lastUpdatedText, setLastUpdatedText] = useState<string | undefined>(undefined);
 
     useEffect(() => {
@@ -141,18 +169,48 @@ function LatestBlocks({ fetchedInfo, fetchedLatestBlocks }: { fetchedInfo: Info 
         }
 
         formatLastUpdated();
-        const interval = setInterval(formatLastUpdated, 1000);
+        const interval = setInterval(() => {
+            formatLastUpdated();
+            setNow(Date.now());
+        }, 1000);
         return () => clearInterval(interval);
 
     }, [lastUpdated]);
 
+    const stream = blocks.slice(0, 12);
 
     return (
-        <div className={classes(styles["blockchain__latest_blocks"], styles["custom-scroll"])}>
+        <div className={styles.stack}>
+            <section className={styles.stream} aria-label="Live block stream">
+                <div className={styles.streamHead}>
+                    <h3>
+                        <span className={styles.liveDot} />
+                        Live block stream
+                    </h3>
+                    {lastUpdatedText && <span className={styles.updated} suppressHydrationWarning>Updated {lastUpdatedText}</span>}
+                </div>
+                <div className={styles.rail}>
+                    {stream.length === 0 && (
+                        <p className={styles.emptyStream}>Blocks appear here when the PDC daemon is connected.</p>
+                    )}
+                    {stream.map((block) => (
+                        <Link key={block.hash || block.height} href={block.hash ? `/block/${block.hash}` : "/"} className={styles.blockCard}>
+                            <span className={block.type === "PoS" ? styles.pos : styles.pow}>{block.type}</span>
+                            <strong>#{block.height}</strong>
+                            <em>{block.hash ? `${block.hash.slice(0, 10)}…` : "—"}</em>
+                            <span>TXs {block.transactions || 0}</span>
+                            <span>Size {formatSize(block.size)}</span>
+                            <span suppressHydrationWarning>{formatAge(block.timestamp, now)}</span>
+                        </Link>
+                    ))}
+                </div>
+            </section>
+            {beforeTable}
+            <div id="blocks" className={classes(styles["blockchain__latest_blocks"], styles["custom-scroll"])}>
             <h3 className={styles["blockchain__latest_blocks__title"]}>
-                Latest Blocks 
+                All blocks
                 {lastUpdated && (
-                    <span className={styles["status__badge"]}><InfoIcon /> Last updated {lastUpdatedText}</span>
+                    <span className={styles["status__badge"]} suppressHydrationWarning><InfoIcon /> Last updated {lastUpdatedText}</span>
                 )}
             </h3>
 
@@ -170,6 +228,7 @@ function LatestBlocks({ fetchedInfo, fetchedLatestBlocks }: { fetchedInfo: Info 
                 pagesTotal={pagesAmount}
             // goToBlockEnter={onGoToBlockEnter}
             />
+        </div>
         </div>
     )
 }

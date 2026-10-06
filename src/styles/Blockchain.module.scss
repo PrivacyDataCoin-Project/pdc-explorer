@@ -1,7 +1,7 @@
 .blockchain {
-    > :not(:first-child, :nth-child(2)) {
-        margin-bottom: 25px;
-    }
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
 
     .info__top__daemon {
         display: flex;

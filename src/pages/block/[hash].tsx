@@ -136,7 +136,7 @@ function Block(props: BlockProps) {
                             </Link>
                         }
                     </div>
-                    <p>{hash?.toUpperCase() || ""}</p>
+                    <p>{hash || ""}</p>
                 </div>
                 <div className={styles["block__info__table"]}>
                     <table>
@@ -205,7 +205,7 @@ function Block(props: BlockProps) {
                             </tr>
                             <tr>
                                 <td>Reward:</td>
-                                <td>{blockInfo?.reward || "-"}</td>
+                                <td>{blockInfo?.reward ?? "-"}</td>
                             </tr>
                             <tr>
                                 <td>Previous ID:</td>

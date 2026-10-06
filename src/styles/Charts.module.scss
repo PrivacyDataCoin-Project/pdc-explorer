@@ -1,41 +1,102 @@
 .charts {
-    .charts__chart__wrapper {
-        background-color: var(--card);
-        .charts__chart__title {
-            padding: 28px 10px;
-            display: flex;
-            justify-content: center;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
 
-            > p {
-                color: var(--faint);
-            }
-        }
+.head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: baseline;
 
-        .charts__chart {
-            * {
-                transition: none;
-            }
-        }
+    h2 {
+        font-size: 13px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
     }
 
+    p {
+        color: var(--faint);
+        font-size: 12px;
+        text-align: right;
+    }
+}
+
+.charts__container {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.charts__chart__wrapper {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border-radius: 16px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    overflow: hidden;
+    text-decoration: none;
+
+    &:hover {
+        border-color: rgba(59, 199, 255, 0.45);
+    }
+}
+
+.charts__chart__title {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 16px 0;
+
+    p {
+        color: var(--faint);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    h3 {
+        margin-top: 6px;
+        font-size: 16px;
+        letter-spacing: -0.02em;
+    }
+
+    strong {
+        font-family: var(--mono);
+        font-size: 14px;
+        color: var(--cyan);
+        white-space: nowrap;
+    }
+}
+
+.charts__chart {
+    * {
+        transition: none;
+    }
+}
+
+.empty {
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--faint);
+    font-size: 13px;
+}
+
+.charts__preloader {
+    width: 100%;
+    min-height: 420px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@media (max-width: 900px) {
     .charts__container {
-        margin-bottom: 20px;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        grid-column-gap: 20px;
-        grid-row-gap: 20px;
-        justify-content: center;
-
-        @media screen and (max-width: 400px) {
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        }
-    }
-
-    .charts__preloader {
-        width: 100%;
-        height: calc(100vh - 200px);
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        grid-template-columns: 1fr;
     }
 }

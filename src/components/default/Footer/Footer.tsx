@@ -5,7 +5,6 @@ import { NETWORK } from '@/config/network';
 
 type SelectedLink =
     "home" |
-    "protocol" |
     "wallet" |
     "site" |
     "explorer";
@@ -24,11 +23,6 @@ const links: {
         title: "Explorer",
         type: "explorer",
         link: "/"
-    },
-    {
-        title: "Protocol",
-        type: "protocol",
-        link: NETWORK.protocolRepo
     },
     {
         title: "Wallet UI",

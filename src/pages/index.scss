@@ -9,6 +9,8 @@
     --blue-deep: #121d92;
     --cyan: #3bc7ff;
     --pink: #e21e80;
+    --gold: #f0c14a;
+    --live: #3ee0a0;
     --line: rgba(255, 255, 255, 0.16);
     --sans: "Plus Jakarta Sans", "Segoe UI", sans-serif;
     --display: Montserrat, "Plus Jakarta Sans", sans-serif;
@@ -28,9 +30,15 @@
 }
 
 #__next {
-    max-width: 1200px;
-    padding: 0 15px;
-    margin: 0 auto;
+    max-width: none;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+#blocks,
+#mempool {
+    scroll-margin-top: 12px;
 }
 
 body {
@@ -66,6 +74,10 @@ h4 {
     font-weight: 600;
 }
 
+p, a, td, th, button, input {
+    line-height: 1.4;
+}
+
 p, a {
     font-size: 14px;
 }
@@ -86,6 +98,12 @@ button {
 
 code, pre, .mono {
     font-family: var(--mono);
+}
+
+.leaflet-container,
+.leaflet-control {
+    font-family: var(--sans);
+    color: var(--ink);
 }
 
 ::-webkit-scrollbar {

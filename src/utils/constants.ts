@@ -1,24 +1,32 @@
-const chartFontColor = "rgb(158, 170, 204)";
+const chartFontColor = "#9aabc8";
+const chartLine = "rgba(255, 255, 255, 0.08)";
+const chartCyan = "#3bc7ff";
 
 const chartTextLabels = {
     style: {
-        color: chartFontColor
+        color: chartFontColor,
+        fontSize: "11px",
     }
 };
 
 const chartOptions: Highcharts.Options = {
     chart: {
-        backgroundColor: "#2b3768",
+        backgroundColor: "transparent",
         style: {
-            fontSize: "14px"
-        }
+            fontFamily: "Plus Jakarta Sans, Segoe UI, sans-serif",
+            fontSize: "12px",
+        },
+        spacing: [12, 8, 8, 8],
     },
+    colors: [chartCyan, "#7aa2ff", "#3ee0a0"],
     yAxis: {
+        gridLineColor: chartLine,
+        gridLineDashStyle: "Dash",
         labels: chartTextLabels,
         title: {
             style: {
                 ...chartTextLabels.style,
-                fontWeight: "bold"
+                fontWeight: "600",
             }
         }
     },
@@ -26,10 +34,11 @@ const chartOptions: Highcharts.Options = {
         type: "datetime",
         labels: {
             ...chartTextLabels,
-            format: '{value:%d.%b}'
+            format: "{value:%d %b}",
         },
-        lineColor: "#e6e6e6",
-        tickColor: "#e6e6e6",
+        lineColor: chartLine,
+        tickColor: "transparent",
+        gridLineColor: "transparent",
     },
     credits: {
         enabled: false
@@ -37,34 +46,56 @@ const chartOptions: Highcharts.Options = {
     title: {
         style: {
             color: "#ffffff",
-            fontSize: "18px",
-            fontWeight: "regular"
+            fontSize: "16px",
+            fontWeight: "600",
         }
     },
     legend: {
         itemStyle: {
             ...chartTextLabels.style,
-            fontWeight: "bold"
-        }
+            fontSize: "12px",
+            fontWeight: "600",
+        },
+        itemHoverStyle: {
+            color: "#ffffff",
+        },
     },
     rangeSelector: {
         inputStyle: {
-            ...chartTextLabels.style
+            ...chartTextLabels.style,
+            color: "#e8eefc",
+            fontSize: "12px",
         },
-        inputBoxWidth: 123,
-        inputBoxBorderColor: chartTextLabels.style.color,
+        inputBoxWidth: 110,
+        inputBoxBorderColor: chartLine,
         labelStyle: {
             ...chartTextLabels.style,
-            fontSize: "12px"
+            fontSize: "12px",
         },
         buttonTheme: {
-            fill: "#32439f",
-            stroke: "#32439f",
-            width: 64,
-            fontSize: "14px",
+            fill: "rgba(255, 255, 255, 0.04)",
+            stroke: "transparent",
+            r: 8,
+            width: 58,
             style: {
-                color: "#ffffff",
-            }
+                color: chartFontColor,
+                fontWeight: "600",
+            },
+            states: {
+                hover: {
+                    fill: "rgba(59, 199, 255, 0.16)",
+                    style: {
+                        color: "#ffffff",
+                    },
+                },
+                select: {
+                    fill: "#1e30f3",
+                    style: {
+                        color: "#ffffff",
+                        fontWeight: "700",
+                    },
+                },
+            },
         },
         buttons: [
             {
@@ -100,10 +131,20 @@ const chartOptions: Highcharts.Options = {
     },
     tooltip: {
         enabled: true,
-        xDateFormat: '%Y/%m/%d %H:%M'
+        backgroundColor: "#10132b",
+        borderColor: chartLine,
+        borderRadius: 10,
+        shadow: false,
+        style: {
+            color: "#e8eefc",
+            fontSize: "12px",
+        },
+        xDateFormat: "%Y-%m-%d %H:%M",
     },
     plotOptions: {
         area: {
+            lineWidth: 2,
+            color: chartCyan,
             fillColor: {
                 linearGradient: {
                     x1: 0,
@@ -111,19 +152,29 @@ const chartOptions: Highcharts.Options = {
                     x2: 0,
                     y2: 1
                 },
-                stops: []
+                stops: [
+                    [0, "rgba(59, 199, 255, 0.38)"],
+                    [1, "rgba(59, 199, 255, 0.02)"],
+                ]
             },
-            lineWidth: 2,
             states: {
                 hover: {
-                    lineWidth: 1
+                    lineWidthPlus: 0,
                 }
             },
             threshold: null
         },
         series: {
+            lineWidth: 2,
             marker: {
-                radius: 2
+                enabled: false,
+                radius: 3,
+                states: {
+                    hover: {
+                        enabled: true,
+                        radius: 4,
+                    }
+                }
             }
         }          
     }

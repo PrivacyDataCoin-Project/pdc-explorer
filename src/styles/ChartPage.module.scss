@@ -1,20 +1,45 @@
 .chart_page {
-    .chart_page__chart__wrapper {
-        margin-bottom: 30px;
-        padding: 20px 0;
-    
-        .chart_page__chart {
-            * {
-                transition: none;
-            }
-        }
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: baseline;
+
+    h2 {
+        font-size: 13px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
     }
 
-    .chart_page__preloader {
-        width: 100%;
-        height: calc(100vh - 200px);
-        display: flex;
-        justify-content: center;
-        align-items: center;
+    p {
+        color: var(--faint);
+        font-size: 12px;
     }
+}
+
+.chart_page__chart__wrapper {
+    border-radius: 16px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 8px 8px 12px;
+    overflow: hidden;
+}
+
+.chart_page__chart {
+    * {
+        transition: none;
+    }
+}
+
+.chart_page__preloader {
+    width: 100%;
+    min-height: 480px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
