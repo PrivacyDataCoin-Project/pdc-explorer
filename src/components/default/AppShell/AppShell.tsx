@@ -22,6 +22,12 @@ const EXPLORER_LINKS = [
     { href: "/pdc_api", label: "API", icon: "api" },
 ];
 
+function cleanDaemonVersion(version: unknown): string | null {
+    if (typeof version !== "string") return null;
+    const trimmed = version.trim().replace(/^pdcd\b\s*/i, "").replace(/\[\]$/, "");
+    return trimmed || null;
+}
+
 function isActive(href: string, pathname: string) {
     if (href.includes("#")) return false;
     if (href === "/") return pathname === "/";
@@ -110,6 +116,7 @@ function AppShell({ open, onNavigate }: { open: boolean; onNavigate: () => void 
     const [noMatch, setNoMatch] = useState(false);
     const [collapsed, setCollapsed] = useState(false);
     const [status, setStatus] = useState<ExplorerStatusType>("offline");
+    const [daemonVersion, setDaemonVersion] = useState<string | null>(null);
 
     const otherNetUrl = state.netMode === "TEST"
         ? process.env.NEXT_PUBLIC_MAINNET_EXPLORER
@@ -124,11 +131,17 @@ function AppShell({ open, onNavigate }: { open: boolean; onNavigate: () => void 
                 if (stopped) return;
                 if (explorerStatus.success === false) {
                     setStatus("offline");
+                    setDaemonVersion(null);
                     return;
                 }
-                setStatus(explorerStatus.data.explorer_status);
+                const nextStatus = explorerStatus.data.explorer_status;
+                setStatus(nextStatus);
+                setDaemonVersion(nextStatus === "offline" ? null : cleanDaemonVersion(explorerStatus.data.daemon_version));
             } catch {
-                if (!stopped) setStatus("offline");
+                if (!stopped) {
+                    setStatus("offline");
+                    setDaemonVersion(null);
+                }
             }
         }
 
@@ -241,7 +254,7 @@ function AppShell({ open, onNavigate }: { open: boolean; onNavigate: () => void 
             <div className={styles.bottom}>
                 <p className={styles.network}>
                     <span className={`${styles.dot} ${styles[status]}`} />
-                    {state.netMode === "TEST" ? "Testnet" : "Mainnet"} · {NETWORK.release}
+                    {state.netMode === "TEST" ? "Testnet" : "Mainnet"}{daemonVersion ? ` · ${daemonVersion}` : ""}
                 </p>
                 {otherNetUrl && (
                     <a className={styles.switchNet} href={otherNetUrl} target="_blank" rel="noreferrer">
