@@ -955,6 +955,53 @@ async function waitForDb() {
     );
 
     app.get(
+        '/api/bridge_deposit_by_txid',
+        exceptionHandler(async (req, res) => {
+            const txid = String(req.query.txid || '').trim();
+            if (!/^[0-9a-fA-F]{64}$/.test(txid)) {
+                res.status(400).json({
+                    success: false,
+                    found: false,
+                    error: 'txid must be 64 hex characters',
+                });
+                return;
+            }
+            const tradeBase = (config.trade_api_url || 'https://api.trade.privacydatacoin.com/api').replace(/\/$/, '');
+            try {
+                const response = await axios.get(
+                    `${tradeBase}/bridge/deposit/by-txid/${encodeURIComponent(txid)}`,
+                    { timeout: 15000, validateStatus: () => true }
+                );
+                if (response.status === 404) {
+                    res.status(404).json({
+                        success: true,
+                        found: false,
+                        data: response.data || { found: false },
+                    });
+                    return;
+                }
+                if (response.status >= 400) {
+                    const message = response.data?.error
+                        || response.data?.message
+                        || `Trade API returned ${response.status}`;
+                    res.status(response.status === 429 ? 429 : 502).json({
+                        success: false,
+                        found: false,
+                        error: message,
+                    });
+                    return;
+                }
+                res.json({ success: true, found: response.data?.found !== false, data: response.data });
+            } catch (error: any) {
+                const message = error?.response?.data?.message
+                    || error?.message
+                    || 'Failed to look up bridge deposit';
+                res.status(502).json({ success: false, found: false, error: message });
+            }
+        })
+    );
+
+    app.get(
         '/api/get_blocks_details/:start/:count',
         exceptionHandler(async (req, res) => {
             try {

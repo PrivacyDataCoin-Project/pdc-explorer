@@ -117,6 +117,11 @@ class Fetch {
         return await fetch(this.proxyPath + "/bridge_status").then(res => res.json());
     }
 
+    static async getBridgeDepositByTxid(txid: string) {
+        const q = encodeURIComponent(txid.trim());
+        return await fetch(this.proxyPath + `/bridge_deposit_by_txid?txid=${q}`).then(res => res.json());
+    }
+
     static async getTxPoolInfo(count: number) {
         return await fetch(this.proxyPath + `/get_tx_pool_details/${encodeURIComponent(count)}`).then(res => res.json());
     }
