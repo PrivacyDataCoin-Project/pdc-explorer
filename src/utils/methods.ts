@@ -113,6 +113,10 @@ class Fetch {
         return await fetch(this.proxyPath + "/node_health").then(res => res.json());
     }
 
+    static async getBridgeStatus() {
+        return await fetch(this.proxyPath + "/bridge_status").then(res => res.json());
+    }
+
     static async getTxPoolInfo(count: number) {
         return await fetch(this.proxyPath + `/get_tx_pool_details/${encodeURIComponent(count)}`).then(res => res.json());
     }

@@ -18,6 +18,7 @@ const EXPLORER_LINKS = [
     { href: "/alt-blocks", label: "Alt-blocks", icon: "alt" },
     { href: "/aliases", label: "Aliases", icon: "alias" },
     { href: "/assets", label: "Assets", icon: "asset" },
+    { href: "/bridge", label: "Bridge", icon: "bridge" },
     { href: "/charts", label: "Charts", icon: "chart" },
     { href: "/pdc_api", label: "API", icon: "api" },
 ];
@@ -84,6 +85,14 @@ function Icon({ name }: { name: string }) {
             <svg {...common}>
                 <circle cx="8" cy="8" r="5.5" stroke="currentColor" />
                 <path d="M8 5.2v5.6M6.2 6.6h2.6a1.3 1.3 0 0 1 0 2.6H6.8" stroke="currentColor" strokeLinecap="round" />
+            </svg>
+        );
+    }
+    if (name === "bridge") {
+        return (
+            <svg {...common}>
+                <path d="M2.5 11.5c1.8-3.5 4-5.2 5.5-5.2s3.7 1.7 5.5 5.2" stroke="currentColor" strokeLinecap="round" />
+                <path d="M4 11.5h8M5.5 8.2V5.5M10.5 8.2V5.5" stroke="currentColor" strokeLinecap="round" />
             </svg>
         );
     }
