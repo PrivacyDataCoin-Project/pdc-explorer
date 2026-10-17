@@ -45,17 +45,18 @@ interface BridgeStatus {
 }
 
 function toBigInt(value: string | number | undefined | null): bigint {
-    if (value === undefined || value === null || value === "") return 0n;
+    if (value === undefined || value === null || value === "") return BigInt(0);
     try {
         return BigInt(typeof value === "number" ? Math.trunc(value) : value);
     } catch {
-        return 0n;
+        return BigInt(0);
     }
 }
 
 function satsToBtc(sats: bigint): string {
-    const whole = sats / 100000000n;
-    const frac = (sats % 100000000n).toString().padStart(8, "0");
+    const satoshi = BigInt(100000000);
+    const whole = sats / satoshi;
+    const frac = (sats % satoshi).toString().padStart(8, "0");
     return `${whole}.${frac}`;
 }
 
@@ -64,16 +65,16 @@ function formatSats(sats: bigint): string {
 }
 
 function coverageLabel(pool: bigint, liability: bigint): string {
-    if (liability === 0n) {
-        return pool > 0n ? "Fully covered" : "Unfunded";
+    if (liability === BigInt(0)) {
+        return pool > BigInt(0) ? "Fully covered" : "Unfunded";
     }
-    const pct = Number((pool * 10000n) / liability) / 100;
+    const pct = Number((pool * BigInt(10000)) / liability) / 100;
     return `${pct.toFixed(2)}%`;
 }
 
 function coverageRatio(pool: bigint, liability: bigint): number {
-    if (liability === 0n) return pool > 0n ? 100 : 0;
-    const pct = Number((pool * 10000n) / liability) / 100;
+    if (liability === BigInt(0)) return pool > BigInt(0) ? 100 : 0;
+    const pct = Number((pool * BigInt(10000)) / liability) / 100;
     return Math.max(0, Math.min(100, pct));
 }
 
@@ -118,7 +119,7 @@ function BridgePage() {
     const liability = toBigInt(status?.liabilitySats);
     const depositMin = toBigInt(status?.security?.depositMinSats);
     const withdrawMin = toBigInt(status?.security?.withdrawMinSats);
-    const withdrawFee = BigInt(status?.tss?.withdrawFeeSats ?? 0);
+    const withdrawFee = BigInt(status?.tss?.withdrawFeeSats ?? 0); // number coerced via BigInt()
     const depositMinUsd = status?.security?.depositMinUsd;
     const reservesOk = status?.reservesOk ?? status?.security?.reservesOk ?? false;
     const ready = status?.ready ?? false;
@@ -185,7 +186,7 @@ function BridgePage() {
                     <span>Coverage ratio</span>
                     <strong>{status ? coverage : "—"}</strong>
                     <em>
-                        {liability === 0n
+                        {liability === BigInt(0)
                             ? "No circulating liability"
                             : `${satsToBtc(pool)} / ${satsToBtc(liability)} BTC`}
                     </em>
