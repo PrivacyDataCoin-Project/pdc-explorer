@@ -90,16 +90,49 @@ interface DepositLookup {
     updatedAt?: number;
 }
 
+interface BridgeHistoryItem {
+    type: "mint" | "burn";
+    status: string;
+    amountSats: string;
+    createdAt: number;
+    txid?: string;
+    btcTxid?: string;
+    mintedTxId?: string;
+    burnTxId?: string;
+    paidTxId?: string;
+}
+
 const BTC_TXID_RE = /^[0-9a-fA-F]{64}$/;
 
 function statusPillClass(status: string | undefined): string {
     if (!status) return styles.pillMuted;
-    if (status === "minted") return styles.pillOk;
+    if (status === "minted" || status === "paid") return styles.pillOk;
     if (status === "rejected" || status === "cancelled" || status === "expired") return styles.pillWarn;
-    if (status === "confirming" || status === "awaiting_tss" || status === "awaiting_federation") {
+    if (
+        status === "confirming" ||
+        status === "awaiting_tss" ||
+        status === "awaiting_federation" ||
+        status === "burning" ||
+        status === "minting"
+    ) {
         return styles.pillInfo;
     }
     return styles.pillMuted;
+}
+
+function shortTxid(txid: string | undefined): string {
+    if (!txid) return "—";
+    if (txid.length <= 18) return txid;
+    return `${txid.slice(0, 10)}…${txid.slice(-6)}`;
+}
+
+function formatHistoryTime(createdAt: number): string {
+    if (!createdAt) return "—";
+    try {
+        return new Date(createdAt * 1000).toISOString().replace("T", " ").replace(/\.\d+Z$/, " UTC");
+    } catch {
+        return String(createdAt);
+    }
 }
 
 function BridgePage() {
@@ -110,6 +143,9 @@ function BridgePage() {
     const [lookupLoading, setLookupLoading] = useState(false);
     const [lookupError, setLookupError] = useState<string | null>(null);
     const [lookup, setLookup] = useState<DepositLookup | null>(null);
+    const [history, setHistory] = useState<BridgeHistoryItem[]>([]);
+    const [historyError, setHistoryError] = useState<string | null>(null);
+    const [historyLoading, setHistoryLoading] = useState(true);
 
     useEffect(() => {
         let stopped = false;
@@ -135,8 +171,33 @@ function BridgePage() {
             }
         }
 
+        async function loadHistory() {
+            try {
+                const response = await Fetch.getBridgeHistory(50, "all");
+                if (stopped) return;
+                if (!response?.success || !response.data) {
+                    setHistoryError(response?.error || "Bridge history unavailable");
+                    setHistory([]);
+                    setHistoryLoading(false);
+                    return;
+                }
+                setHistory(Array.isArray(response.data.items) ? response.data.items : []);
+                setHistoryError(null);
+                setHistoryLoading(false);
+            } catch (err: any) {
+                if (stopped) return;
+                setHistoryError(err?.message || "Failed to load bridge history");
+                setHistory([]);
+                setHistoryLoading(false);
+            }
+        }
+
         load();
-        const timer = setInterval(load, 30000);
+        loadHistory();
+        const timer = setInterval(() => {
+            load();
+            loadHistory();
+        }, 30000);
         return () => {
             stopped = true;
             clearInterval(timer);
@@ -278,10 +339,103 @@ function BridgePage() {
 
             <div className={styles.panel}>
                 <div className={styles.panelHead}>
+                    <h3>Bridge history</h3>
+                    <p>
+                        Recent BTCX mint and burn events from the Trade bridge ledger.
+                        Amounts and txids only — no PDC or destination addresses.
+                    </p>
+                </div>
+                {historyError && (
+                    <p className={styles.lookupMsg}>{historyError}</p>
+                )}
+                {!historyError && (
+                    <div className={styles.historyWrap}>
+                        <table className={styles.historyTable}>
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                    <th>Txid</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {historyLoading && history.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5}>Loading…</td>
+                                    </tr>
+                                ) : history.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5}>No mint or burn events yet.</td>
+                                    </tr>
+                                ) : (
+                                    history.map((item, idx) => {
+                                        const primary =
+                                            item.type === "mint"
+                                                ? item.btcTxid || item.mintedTxId || item.txid
+                                                : item.burnTxId || item.paidTxId || item.txid;
+                                        const btcLink =
+                                            item.type === "mint" && item.btcTxid
+                                                ? `https://mempool.space/tx/${item.btcTxid}`
+                                                : item.type === "burn" && item.paidTxId
+                                                    ? `https://mempool.space/tx/${item.paidTxId}`
+                                                    : null;
+                                        const pdcLink =
+                                            item.type === "mint" && item.mintedTxId
+                                                ? `/transaction/${item.mintedTxId}`
+                                                : item.type === "burn" && item.burnTxId
+                                                    ? `/transaction/${item.burnTxId}`
+                                                    : null;
+                                        const href = btcLink || pdcLink;
+                                        return (
+                                            <tr key={`${item.type}-${item.createdAt}-${primary || idx}`}>
+                                                <td>
+                                                    <span
+                                                        className={`${styles.pill} ${
+                                                            item.type === "mint" ? styles.pillOk : styles.pillInfo
+                                                        }`}
+                                                    >
+                                                        {item.type === "mint" ? "Mint" : "Burn"}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {formatSats(toBigInt(item.amountSats))} sats
+                                                    <em className={styles.historySub}>
+                                                        {satsToBtc(toBigInt(item.amountSats))} BTCX
+                                                    </em>
+                                                </td>
+                                                <td>
+                                                    <span className={`${styles.pill} ${statusPillClass(item.status)}`}>
+                                                        {item.status}
+                                                    </span>
+                                                </td>
+                                                <td>{formatHistoryTime(item.createdAt)}</td>
+                                                <td>
+                                                    {href && primary ? (
+                                                        <a href={href} target={btcLink ? "_blank" : undefined} rel={btcLink ? "noopener noreferrer" : undefined}>
+                                                            {shortTxid(primary)}
+                                                        </a>
+                                                    ) : (
+                                                        shortTxid(primary)
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
+            <div className={styles.panel}>
+                <div className={styles.panelHead}>
                     <h3>Track your deposit</h3>
                     <p>
-                        Paste your Bitcoin transaction ID to check peg progress.
-                        Private by design — no public list of deposits or PDC addresses.
+                        Paste your Bitcoin transaction ID to check peg progress for a specific deposit.
+                        Destination PDC addresses are never listed publicly.
                     </p>
                 </div>
                 <form className={styles.lookupForm} onSubmit={lookupDeposit}>
@@ -459,8 +613,9 @@ function BridgePage() {
             </div>
 
             <p className={styles.note}>
-                Deposit tracking uses a private lookup by Bitcoin txid only — there is no public browseable
-                list of deposits or destination PDC addresses.
+                History shows redacted mint/burn ledger rows (amounts, status, txids). Deposit tracking by
+                Bitcoin txid remains available for individual progress checks; destination PDC addresses
+                are never listed.
             </p>
         </section>
     );

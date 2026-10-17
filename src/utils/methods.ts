@@ -122,6 +122,14 @@ class Fetch {
         return await fetch(this.proxyPath + `/bridge_deposit_by_txid?txid=${q}`).then(res => res.json());
     }
 
+    static async getBridgeHistory(limit = 50, type: "all" | "mint" | "burn" = "all") {
+        const q = new URLSearchParams({
+            limit: String(limit),
+            type,
+        });
+        return await fetch(this.proxyPath + `/bridge_history?${q}`).then(res => res.json());
+    }
+
     static async getTxPoolInfo(count: number) {
         return await fetch(this.proxyPath + `/get_tx_pool_details/${encodeURIComponent(count)}`).then(res => res.json());
     }
