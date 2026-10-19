@@ -28,6 +28,7 @@ export const NETWORK = {
     auditableIntegratedAddressPrefix: "aiPX",
     release: "v2.1.0",
     website: "https://privacydatacoin.com/",
+    tradeWebsite: "https://trade.privacydatacoin.com/",
     uiRepo: "https://github.com/PrivacyDataCoin-Project/PDC/releases",
     siteRepo: "https://github.com/PrivacyDataCoin-Project/PrivacyDataCoin-Project.github.io",
 } as const;
@@ -35,3 +36,7 @@ export const NETWORK = {
 /** Native coin asset id. Same bytes as crypto::c_point_H in currency_basic.h. */
 export const PDC_ASSET_ID =
     "d6329b5b1f7c0805b5c345f4957554002a2f557845f64d7645dae0e051a6498a";
+
+/** Wrapped Bitcoin (BTCX) asset id used by the Trade bridge peg. */
+export const BTCX_ASSET_ID =
+    "c2bf0410873b49ec7e7dd19d62bca9625d80cd3123670a67b48d997d3127426d";

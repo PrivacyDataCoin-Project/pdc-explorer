@@ -16,8 +16,19 @@ import { useSearchParams } from "next/navigation";
 import { GetServerSideProps } from "next";
 import { AssetsPageProps, getAssets } from "@/utils/ssr";
 import Utils from "@/utils/utils";
-import { PDC_ASSET_ID } from "@/utils/constants";
+import { BTCX_ASSET_ID, PDC_ASSET_ID } from "@/utils/constants";
+import { NETWORK } from "@/config/network";
 import Link from "next/link";
+
+function assetSourceLink(assetId?: string) {
+    if (assetId === PDC_ASSET_ID) {
+        return <Link href={NETWORK.website} target="_blank" rel="noreferrer">Website</Link>;
+    }
+    if (assetId === BTCX_ASSET_ID) {
+        return <Link href={NETWORK.tradeWebsite} target="_blank" rel="noreferrer">Website</Link>;
+    }
+    return "—";
+}
 
 
 export const DEFAULT_ASSETS_ON_PAGE = "20";
@@ -257,10 +268,7 @@ function Assets(props: AssetsPageProps) {
             
         </div>,
         e?.price ? `${e?.price}$` : "No data",
-        e?.asset_id === PDC_ASSET_ID ? 
-        <Link href="https://privacydatacoin.com/" target="_blank">Website</Link>
-        : 
-        "—"
+        assetSourceLink(e?.asset_id),
     ]);
 
     const statsPanelData = [

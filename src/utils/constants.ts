@@ -197,4 +197,4 @@ const chartDataFieldMap: { [key: string]: string } = {
 };
 
 export { chartOptions, chartFontColor, chartRequestNames, chartDataFieldMap };
-export { PDC_ASSET_ID } from "@/config/network";
+export { PDC_ASSET_ID, BTCX_ASSET_ID } from "@/config/network";
