@@ -103,16 +103,31 @@ function Assets(props: AssetsPageProps) {
     
     const fetchIdRef = useRef<string>(nanoid());
 
-    const fetchPdcPrice = useCallback(async (assets?: any[]) => {
-        const pdcPrice = await Utils.getPdcPrice();
-        setAssets(prev => {
-            const newAssets = [...(assets || prev)];
-            const pdcAsset = newAssets.find(e => e.asset_id === PDC_ASSET_ID);
-            if (pdcAsset) {
-                pdcAsset.price = pdcPrice;
-            }
-            return newAssets;
-        });
+    const applyTradePrices = useCallback(async (list: any[]) => {
+        try {
+            const market = await Fetch.getPdcMarket();
+            const pdcUsd = Number(market?.data?.pdcUsd ?? market?.data?.usd);
+            const btcxUsd = Number(market?.data?.btcxUsd);
+            const pdcInBtcx = Number(market?.data?.btcx);
+            const resolvedBtcxUsd = Number.isFinite(btcxUsd) && btcxUsd > 0
+                ? btcxUsd
+                : (Number.isFinite(pdcUsd) && pdcUsd > 0 && Number.isFinite(pdcInBtcx) && pdcInBtcx > 0
+                    ? pdcUsd / pdcInBtcx
+                    : NaN);
+
+            return list.map((asset) => {
+                if (asset?.asset_id === PDC_ASSET_ID && Number.isFinite(pdcUsd) && pdcUsd > 0) {
+                    return { ...asset, price: pdcUsd.toFixed(2) };
+                }
+                if (asset?.asset_id === BTCX_ASSET_ID && Number.isFinite(resolvedBtcxUsd) && resolvedBtcxUsd > 0) {
+                    return { ...asset, price: resolvedBtcxUsd.toFixed(2) };
+                }
+                return asset;
+            });
+        } catch (error) {
+            console.error(error);
+            return list;
+        }
     }, []);
 
     useEffect(() => {
@@ -171,18 +186,6 @@ function Assets(props: AssetsPageProps) {
     }, [searchParams, initFetched]);
 
     useEffect(() => {
-        fetchPdcPrice();
-
-        const intervalId = setInterval(() => {
-            fetchPdcPrice();
-        }, 10e3);
-
-        return () => {
-            clearInterval(intervalId);
-        }
-    }, []);
-
-    useEffect(() => {
         setPage("1");
     }, [isWhitelist, inputState]);
 
@@ -220,25 +223,30 @@ function Assets(props: AssetsPageProps) {
             setAssets(result);
 
             try {
-                const assetsIds = result.map((asset: any) => asset.asset_id);
+                let resultAssets = await applyTradePrices(result);
+
+                // Keep Trade DEX rates as a secondary source for other assets when available.
+                const assetsIds = resultAssets.map((asset: any) => asset.asset_id);
                 const assetsPriceRatesResponse = await Fetch.getAssetsPriceRates(assetsIds);
                 const assetsPriceRates = assetsPriceRatesResponse?.priceRates;
                 const pdcPrice = await Utils.getPdcPrice();
 
-                const resultAssets = result.map((resultAsset: any) => {
-                    if (assetsPriceRatesResponse?.success && pdcPrice && Array.isArray(assetsPriceRates)) {
+                if (assetsPriceRatesResponse?.success && pdcPrice && Array.isArray(assetsPriceRates)) {
+                    resultAssets = resultAssets.map((resultAsset: any) => {
+                        if (resultAsset?.asset_id === PDC_ASSET_ID || resultAsset?.asset_id === BTCX_ASSET_ID) {
+                            return resultAsset;
+                        }
                         const targetAsset = assetsPriceRates.find((asset: any) => asset.asset_id === resultAsset.asset_id);
                         if (!targetAsset) return resultAsset;
                         return {
                             ...resultAsset,
                             price: parseFloat((targetAsset.rate * pdcPrice).toFixed(6)).toString(),
                         };
-                    }
-                    return resultAsset;
-                });
+                    });
+                }
 
                 if (newFetchId !== fetchIdRef.current) return;
-                await fetchPdcPrice(resultAssets);
+                setAssets(resultAssets);
             } catch (error) {
                 console.error(error);
             } finally {
@@ -247,7 +255,9 @@ function Assets(props: AssetsPageProps) {
         }
         
         fetchAssets();
-    }, [itemsOnPage, page, isWhitelist, inputState]);
+        const intervalId = setInterval(fetchAssets, 30_000);
+        return () => clearInterval(intervalId);
+    }, [itemsOnPage, page, isWhitelist, inputState, applyTradePrices]);
 
     function onAssetClick(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>, asset: Object) {
         event.preventDefault();

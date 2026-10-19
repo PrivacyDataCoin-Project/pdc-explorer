@@ -983,12 +983,15 @@ async function waitForDb() {
                     res.status(502).json({ success: false, error: 'PDC market price not available' });
                     return;
                 }
+                const btcxUsd = usd / btcx;
                 res.json({
                     success: true,
                     data: {
                         symbol: pdcBtcx.symbol || 'PDC-BTCX',
                         usd,
                         btcx,
+                        pdcUsd: usd,
+                        btcxUsd,
                         source: 'trade',
                         timestamp: pdcBtcx.timestamp ?? null,
                     },

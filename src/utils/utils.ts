@@ -182,8 +182,18 @@ class Utils {
 
     static async getPdcPrice(): Promise<number | undefined> {
         const result = await Fetch.getPrice();
-        const price = result?.data?.pdc?.usd;
-        return price;
+        const price = Number(result?.data?.pdc?.usd);
+        if (Number.isFinite(price) && price > 0) return price;
+
+        try {
+            const market = await Fetch.getPdcMarket();
+            const tradePrice = Number(market?.data?.usd ?? market?.data?.pdcUsd);
+            if (Number.isFinite(tradePrice) && tradePrice > 0) return tradePrice;
+        } catch {
+            // ignore trade fallback errors
+        }
+
+        return undefined;
     }
 
     static async fetchTransaction(hash: string) {

@@ -7,7 +7,7 @@ import { latestBlocksInitState } from "@/components/default/LatestBlocks/LatestB
 import Utils from "./utils";
 import { DEFAULT_ITEMS_ON_PAGE } from "@/pages/aliases";
 import { DEFAULT_ASSETS_ON_PAGE } from "@/pages/assets";
-import { PDC_ASSET_ID } from "./constants";
+import { BTCX_ASSET_ID, PDC_ASSET_ID } from "./constants";
 import { GetServerSidePropsContext } from "next";
 
 export async function getMainPageProps() {
@@ -261,11 +261,28 @@ export async function getAssets() {
 
         const assets = await Fetch.getWhitelistedAssets(0, parseInt(DEFAULT_ASSETS_ON_PAGE, 10), "")
 
-        const pdcPrice = await Utils.getPdcPrice();
+        let pdcUsd: number | undefined;
+        let btcxUsd: number | undefined;
+        try {
+            const market = await Fetch.getPdcMarket();
+            pdcUsd = Number(market?.data?.pdcUsd ?? market?.data?.usd);
+            btcxUsd = Number(market?.data?.btcxUsd);
+            const pdcInBtcx = Number(market?.data?.btcx);
+            if (!(Number.isFinite(btcxUsd) && btcxUsd > 0)
+                && Number.isFinite(pdcUsd) && (pdcUsd as number) > 0
+                && Number.isFinite(pdcInBtcx) && pdcInBtcx > 0) {
+                btcxUsd = (pdcUsd as number) / pdcInBtcx;
+            }
+        } catch {
+            pdcUsd = await Utils.getPdcPrice();
+        }
 
         assets.forEach((element: any) => {
-            if (element.asset_id === PDC_ASSET_ID) {
-                element.price = pdcPrice || null;
+            if (element.asset_id === PDC_ASSET_ID && Number.isFinite(pdcUsd) && (pdcUsd as number) > 0) {
+                element.price = (pdcUsd as number).toFixed(2);
+            }
+            if (element.asset_id === BTCX_ASSET_ID && Number.isFinite(btcxUsd) && (btcxUsd as number) > 0) {
+                element.price = (btcxUsd as number).toFixed(2);
             }
         });
 
