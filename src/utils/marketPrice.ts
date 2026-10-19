@@ -34,14 +34,14 @@ export function formatMarketHint(usd: number, btcx: number): string {
 
 export function amountFromAtomic(value: string | number | undefined, decimals = 12): number | null {
     if (value == null || value === "") return null;
-    try {
-        const raw = BigInt(String(value).replace(/[^\d]/g, "") || "0");
-        const base = BigInt(10) ** BigInt(decimals);
-        const whole = raw / base;
-        const frac = raw % base;
-        return Number(whole) + Number(frac) / Number(base);
-    } catch {
-        const parsed = Number(value) / 10 ** decimals;
+    const digits = String(value).replace(/[^\d]/g, "");
+    if (!digits) return null;
+    if (digits.length <= decimals) {
+        const parsed = Number(`0.${digits.padStart(decimals, "0")}`);
         return Number.isFinite(parsed) ? parsed : null;
     }
+    const whole = digits.slice(0, -decimals);
+    const frac = digits.slice(-decimals);
+    const parsed = Number(`${whole}.${frac}`);
+    return Number.isFinite(parsed) ? parsed : null;
 }
