@@ -139,10 +139,19 @@ class Fetch {
     }
 
     static async getAssetsPriceRates(assetsIds: string[]){
-        return await postFetch(
-            this.proxyPath + `/get_assets_price_rates`,
-            { assetsIds },
-        ).then(res => res.json());
+        try {
+            const response = await postFetch(
+                this.proxyPath + `/get_assets_price_rates`,
+                { assetsIds },
+            );
+            const contentType = response.headers.get("content-type") || "";
+            if (!response.ok || !contentType.includes("application/json")) {
+                return { success: false };
+            }
+            return await response.json();
+        } catch {
+            return { success: false };
+        }
     }
     
     static async getMatrixAddresses(page: string, items:string){

@@ -204,6 +204,10 @@ function Assets(props: AssetsPageProps) {
                 return;
             }
 
+            // Show the list immediately so All Assets is not stuck on the previous whitelist view
+            // when optional price enrichment fails.
+            setAssets(result);
+
             try {
                 const assetsIds = result.map((asset: any) => asset.asset_id);
                 const assetsPriceRatesResponse = await Fetch.getAssetsPriceRates(assetsIds);
@@ -223,7 +227,7 @@ function Assets(props: AssetsPageProps) {
                 });
 
                 if (newFetchId !== fetchIdRef.current) return;
-                fetchPdcPrice(resultAssets);
+                await fetchPdcPrice(resultAssets);
             } catch (error) {
                 console.error(error);
             } finally {

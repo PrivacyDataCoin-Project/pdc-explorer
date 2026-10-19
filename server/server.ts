@@ -215,56 +215,69 @@ async function waitForDb() {
         res.send('pong')
     }));
 
+    async function fetchAllKnownAssets() {
+        const dbAssets = await Asset.findAll({
+            order: [['id', 'ASC']],
+            raw: true,
+        });
+
+        let whitelistAssets: any[] = [nativeCoinAsset()];
+        if (config.assets_whitelist_url) {
+            try {
+                const response = await axios({
+                    method: 'get',
+                    url: config.assets_whitelist_url,
+                    timeout: 15000,
+                });
+                if (Array.isArray(response.data?.assets)) {
+                    whitelistAssets = [nativeCoinAsset(), ...response.data.assets];
+                }
+            } catch (error) {
+                console.log('Failed to load assets whitelist for all-assets merge', error);
+            }
+        }
+
+        const byId = new Map<string, any>();
+        for (const asset of whitelistAssets) {
+            if (!asset?.asset_id) continue;
+            byId.set(asset.asset_id, { ...asset, whitelisted: true });
+        }
+        for (const asset of dbAssets) {
+            if (!asset?.asset_id || byId.has(asset.asset_id)) continue;
+            byId.set(asset.asset_id, { ...asset, whitelisted: false });
+        }
+
+        const assets = [...byId.values()];
+        assets.sort((left, right) => {
+            if (left.asset_id === PDC_ASSET_ID) return -1;
+            if (right.asset_id === PDC_ASSET_ID) return 1;
+            if (left.whitelisted && !right.whitelisted) return -1;
+            if (!left.whitelisted && right.whitelisted) return 1;
+            return String(left.ticker || '').localeCompare(String(right.ticker || ''));
+        });
+        return assets;
+    }
+
+    function filterAssetsBySearch(assets: any[], searchText: string) {
+        const query = String(searchText || '').trim();
+        if (!query) return assets;
+        const queryLower = query.toLowerCase();
+        return assets.filter((asset) =>
+            asset.ticker?.toLowerCase()?.includes(queryLower)
+            || asset.full_name?.toLowerCase()?.includes(queryLower)
+            || asset.asset_id === query
+        );
+    }
+
     app.get(
         '/api/get_assets/:offset/:count',
         exceptionHandler(async (req, res) => {
-            const offset = parseInt(req.params.offset, 10);
-            const count = parseInt(req.params.count, 10);
+            const offset = parseInt(req.params.offset, 10) || 0;
+            const count = parseInt(req.params.count, 10) || 0;
             const searchText = req.query.search || '';
 
-            if (!searchText) {
-                // No searchText, fetch all assets with pagination
-                const assets = await Asset.findAll({
-                    order: [['id', 'ASC']],
-                    limit: count,
-                    offset: offset
-                });
-
-                return res.send(assets);
-            }
-
-            // If there is searchText, count matching records
-            const searchCondition = {
-                [Op.or]: [
-                    { ticker: { [Op.iLike]: `%${searchText}%` } },
-                    { full_name: { [Op.iLike]: `%${searchText}%` } }
-                ]
-            };
-
-            const firstSearchRowCount = await Asset.count({
-                where: searchCondition
-            });
-
-            if (firstSearchRowCount > 0) {
-                // Fetch records that match the searchText
-                const assets = await Asset.findAll({
-                    where: searchCondition,
-                    order: [['id', 'ASC']],
-                    limit: count,
-                    offset: offset
-                });
-
-                return res.send(assets);
-            } else {
-                // If no matching records found, fetch by asset_id
-                const assets = await Asset.findAll({
-                    where: { asset_id: searchText },
-                    limit: count,
-                    offset: offset
-                });
-
-                return res.send(assets);
-            }
+            const assets = filterAssetsBySearch(await fetchAllKnownAssets(), String(searchText));
+            return res.send(assets.slice(offset, offset + Math.max(count, 0)));
         })
     );
 
@@ -452,8 +465,7 @@ async function waitForDb() {
         exceptionHandler(async (req, res) => {
             const whitelistedAssets = await fetchWhitelistedAssets();
             const whitelistedAssetsAmount = whitelistedAssets.length + 1;
-
-            const assetsAmount = await Asset.count();
+            const assetsAmount = (await fetchAllKnownAssets()).length;
 
             return res.json({ assetsAmount, whitelistedAssetsAmount });
         }),
@@ -1479,20 +1491,24 @@ async function waitForDb() {
         if (!config.trade_api_url) {
             return res.json({ success: false, data: "Trade API is not configured" });
         }
-        const assetsPricesResponse = await axios({
-            method: 'post',
-            url: config.trade_api_url + '/dex/get-assets-price-rates',
-            data: { assetsIds },
-        });
+        try {
+            const assetsPricesResponse = await axios({
+                method: 'post',
+                url: config.trade_api_url + '/dex/get-assets-price-rates',
+                data: { assetsIds },
+                timeout: 15000,
+                validateStatus: () => true,
+            });
 
-        const assetsPrices = assetsPricesResponse.data;
-
-        if (assetsPricesResponse?.data?.success) {
-            return res.json({ success: true, priceRates: assetsPrices.priceRates });
-        } else {
-            return res.json({ success: false, data: "Assets not found" })
+            const assetsPrices = assetsPricesResponse.data;
+            if (assetsPricesResponse.status < 400 && assetsPrices?.success) {
+                return res.json({ success: true, priceRates: assetsPrices.priceRates });
+            }
+            return res.json({ success: false, data: "Assets not found" });
+        } catch (error) {
+            console.log('get_assets_price_rates failed', error);
+            return res.json({ success: false, data: "Assets price rates unavailable" });
         }
-
     }))
 
     app.get('/api/explorer_status', exceptionHandler(async (req, res) => {
