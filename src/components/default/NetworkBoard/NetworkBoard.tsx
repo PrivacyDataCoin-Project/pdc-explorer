@@ -8,6 +8,7 @@ import Utils from "@/utils/utils";
 import { socket } from "@/utils/socket";
 import { NETWORK } from "@/config/network";
 import { PoolElement } from "@/components/default/TransactionPool/TransactionPool";
+import { amountFromAtomic, formatMarketHint, PdcMarketQuote } from "@/utils/marketPrice";
 
 function readPercent(value: string | number | undefined) {
     if (value == null || value === "") return null;
@@ -74,6 +75,7 @@ function NetworkBoard({
     const [info, setInfo] = useState<Info | null>(fetchedInfo);
     const [blocks, setBlocks] = useState<Block[]>(fetchedBlocks);
     const [poolCount, setPoolCount] = useState(mempoolCount);
+    const [market, setMarket] = useState<PdcMarketQuote | null>(null);
 
     useEffect(() => {
         function onInfo(data: string) {
@@ -126,6 +128,33 @@ function NetworkBoard({
         };
     }, [info]);
 
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadMarket() {
+            try {
+                const result = await Fetch.getPdcMarket();
+                if (cancelled) return;
+                const usd = Number(result?.data?.usd);
+                const btcx = Number(result?.data?.btcx);
+                if (result?.success && Number.isFinite(usd) && usd > 0 && Number.isFinite(btcx) && btcx > 0) {
+                    setMarket({ usd, btcx });
+                    return;
+                }
+                setMarket(null);
+            } catch {
+                if (!cancelled) setMarket(null);
+            }
+        }
+
+        loadMarket();
+        const id = setInterval(loadMarket, 30_000);
+        return () => {
+            cancelled = true;
+            clearInterval(id);
+        };
+    }, []);
+
     const sorted = [...blocks].sort((left, right) => left.height - right.height);
     const gaps = sorted.slice(1).map((block, index) => block.timestamp - sorted[index].timestamp).filter((gap) => gap > 0);
     const avgGap = average(gaps);
@@ -137,14 +166,30 @@ function NetworkBoard({
     const staked = visibilityInfo ? Utils.toShiftedNumber(visibilityInfo.amount.toString(), 12) : "—";
     const burned = visibilityInfo?.pdc_burned != null ? visibilityInfo.pdc_burned.toFixed(2) : "—";
     const transactions = info ? Utils.formatNumber(info.height + info.tx_count, 0) : "—";
+    const emittedAmount = amountFromAtomic(info?.total_coins);
+    const stakedAmount = amountFromAtomic(visibilityInfo?.amount);
+    const emittedHint = market && emittedAmount != null
+        ? formatMarketHint(emittedAmount * market.usd, emittedAmount * market.btcx)
+        : "";
+    const stakedHint = market && stakedAmount != null
+        ? formatMarketHint(stakedAmount * market.usd, stakedAmount * market.btcx)
+        : "";
 
     const facts = [
         { label: "Avg block", value: avgGap == null ? `${NETWORK.targetSeconds}s target` : formatDuration(avgGap) },
         { label: "Avg size", value: avgSize == null ? "—" : formatSize(avgSize) },
         { label: "Transactions", value: transactions },
         { label: "Mempool", value: `${poolCount} tx` },
-        { label: "Emitted", value: emitted === "" || emitted === "—" ? "—" : `${emitted} PDC` },
-        { label: "Staked est.", value: staked === "" || staked === "—" ? "—" : `${staked} PDC` },
+        {
+            label: "Emitted",
+            value: emitted === "" || emitted === "—" ? "—" : `${emitted} PDC`,
+            hint: emittedHint || undefined,
+        },
+        {
+            label: "Staked est.",
+            value: staked === "" || staked === "—" ? "—" : `${staked} PDC`,
+            hint: stakedHint || undefined,
+        },
         { label: "Burned", value: burned === "—" ? burned : `${burned} PDC` },
         { label: "Premine", value: `${NETWORK.premine} PDC` },
     ];
@@ -170,6 +215,9 @@ function NetworkBoard({
                         <div key={fact.label} className={styles.fact}>
                             <span>{fact.label}</span>
                             <strong>{fact.value}</strong>
+                            {"hint" in fact && fact.hint ? (
+                                <p className={styles.factHint}>{fact.hint}</p>
+                            ) : null}
                         </div>
                     ))}
                 </div>

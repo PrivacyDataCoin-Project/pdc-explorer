@@ -141,6 +141,12 @@
         font-weight: 650;
         letter-spacing: -0.02em;
     }
+
+    .factHint {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.3;
+    }
 }
 
 @media screen and (max-width: 980px) {

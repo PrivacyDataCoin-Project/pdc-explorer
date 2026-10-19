@@ -7,20 +7,7 @@ import { socket } from "../../../utils/socket";
 import { Store } from "@/store/store-reducer";
 import { NETWORK } from "@/config/network";
 import Fetch from "@/utils/methods";
-
-function formatUsdPrice(value: number): string {
-    if (!Number.isFinite(value) || value <= 0) return "";
-    if (value >= 100) return `$${value.toFixed(2)}`;
-    if (value >= 1) return `$${value.toFixed(2)}`;
-    if (value >= 0.01) return `$${value.toFixed(4)}`;
-    return `$${value.toPrecision(3)}`;
-}
-
-function formatBtcxPrice(value: number): string {
-    if (!Number.isFinite(value) || value <= 0) return "";
-    const fixed = value.toFixed(8).replace(/\.?0+$/, "");
-    return `${fixed} BTCX`;
-}
+import { formatMarketHint } from "@/utils/marketPrice";
 
 function StatsPanel(props: { visibilityInfo?: VisibilityInfo | null, fetchedInfo: Info | null, noStats?: boolean }) {
     const { state } = useContext(Store);
@@ -57,8 +44,9 @@ function StatsPanel(props: { visibilityInfo?: VisibilityInfo | null, fetchedInfo
                 if (cancelled) return;
                 const usd = Number(result?.data?.usd);
                 const btcx = Number(result?.data?.btcx);
-                if (result?.success && Number.isFinite(usd) && usd > 0 && Number.isFinite(btcx) && btcx > 0) {
-                    setRewardHint(`${formatUsdPrice(usd)} · ${formatBtcxPrice(btcx)}`);
+                const hint = result?.success ? formatMarketHint(usd, btcx) : "";
+                if (hint) {
+                    setRewardHint(hint);
                     return;
                 }
                 setRewardHint("Price unavailable");
