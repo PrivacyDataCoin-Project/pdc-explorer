@@ -6,12 +6,29 @@ import { useState, useEffect, useContext } from "react";
 import { socket } from "../../../utils/socket";
 import { Store } from "@/store/store-reducer";
 import { NETWORK } from "@/config/network";
+import Fetch from "@/utils/methods";
+
+function formatUsdPrice(value: number): string {
+    if (!Number.isFinite(value) || value <= 0) return "";
+    if (value >= 100) return `$${value.toFixed(2)}`;
+    if (value >= 1) return `$${value.toFixed(2)}`;
+    if (value >= 0.01) return `$${value.toFixed(4)}`;
+    return `$${value.toPrecision(3)}`;
+}
+
+function formatBtcxPrice(value: number): string {
+    if (!Number.isFinite(value) || value <= 0) return "";
+    const fixed = value.toFixed(8).replace(/\.?0+$/, "");
+    return `${fixed} BTCX`;
+}
 
 function StatsPanel(props: { visibilityInfo?: VisibilityInfo | null, fetchedInfo: Info | null, noStats?: boolean }) {
     const { state } = useContext(Store);
     const { visibilityInfo, fetchedInfo } = props;
 
     const [info, setInfo] = useState<Info | null>(fetchedInfo);
+    const [rewardHint, setRewardHint] = useState("…");
+
     useEffect(() => {
         function onInfo(data: string) {
             try {
@@ -31,9 +48,33 @@ function StatsPanel(props: { visibilityInfo?: VisibilityInfo | null, fetchedInfo
         };
     }, []);
 
-    const reportedVersion = typeof (info as Info & { version?: unknown } | null)?.version === "string"
-        ? (info as Info & { version?: string }).version!.trim().replace(/^pdcd\b\s*/i, "").replace(/\[\]$/, "")
-        : "";
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadMarket() {
+            try {
+                const result = await Fetch.getPdcMarket();
+                if (cancelled) return;
+                const usd = Number(result?.data?.usd);
+                const btcx = Number(result?.data?.btcx);
+                if (result?.success && Number.isFinite(usd) && usd > 0 && Number.isFinite(btcx) && btcx > 0) {
+                    setRewardHint(`${formatUsdPrice(usd)} · ${formatBtcxPrice(btcx)}`);
+                    return;
+                }
+                setRewardHint("Price unavailable");
+            } catch {
+                if (!cancelled) setRewardHint("Price unavailable");
+            }
+        }
+
+        loadMarket();
+        const id = setInterval(loadMarket, 30_000);
+        return () => {
+            cancelled = true;
+            clearInterval(id);
+        };
+    }, []);
+
     const chainHeight = info?.height || 0;
     const indexedHeight = info?.database_height || 0;
     const infoHeight = info ? (Utils.formatNumber(chainHeight, 0) || "...") : "...";
@@ -74,9 +115,7 @@ function StatsPanel(props: { visibilityInfo?: VisibilityInfo | null, fetchedInfo
         {
             label: "Block reward",
             value: `${NETWORK.blockReward} PDC`,
-            hint: reportedVersion
-                ? `${state.netMode === "TEST" ? "Testnet" : "Mainnet"} · ${reportedVersion}`
-                : (state.netMode === "TEST" ? "Testnet" : "Mainnet"),
+            hint: rewardHint,
             tone: "gold",
         },
     ];

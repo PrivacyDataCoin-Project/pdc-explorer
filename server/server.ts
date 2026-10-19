@@ -955,6 +955,42 @@ async function waitForDb() {
     );
 
     app.get(
+        '/api/pdc_market',
+        exceptionHandler(async (_req, res) => {
+            const tradeBase = (config.trade_api_url || 'https://api.trade.privacydatacoin.com/api').replace(/\/$/, '');
+            try {
+                const response = await axios.get(`${tradeBase}/ticker`, { timeout: 15000 });
+                const tickers = Array.isArray(response.data?.tickers) ? response.data.tickers : [];
+                const pdcBtcx = tickers.find((t: any) =>
+                    t?.symbol === 'PDC-BTCX'
+                    || (t?.base === 'PDC' && t?.quote === 'BTCX')
+                );
+                const usd = Number(pdcBtcx?.lastUsd);
+                const btcx = Number(pdcBtcx?.last);
+                if (!Number.isFinite(usd) || usd <= 0 || !Number.isFinite(btcx) || btcx <= 0) {
+                    res.status(502).json({ success: false, error: 'PDC market price not available' });
+                    return;
+                }
+                res.json({
+                    success: true,
+                    data: {
+                        symbol: pdcBtcx.symbol || 'PDC-BTCX',
+                        usd,
+                        btcx,
+                        source: 'trade',
+                        timestamp: pdcBtcx.timestamp ?? null,
+                    },
+                });
+            } catch (error: any) {
+                const message = error?.response?.data?.message
+                    || error?.message
+                    || 'Failed to fetch Trade ticker';
+                res.status(502).json({ success: false, error: message });
+            }
+        })
+    );
+
+    app.get(
         '/api/bridge_deposit_by_txid',
         exceptionHandler(async (req, res) => {
             const txid = String(req.query.txid || '').trim();
