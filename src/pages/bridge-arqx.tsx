@@ -69,10 +69,58 @@ function coverageRatio(pool: bigint, liability: bigint): number {
     return Math.max(0, Math.min(100, pct));
 }
 
+interface ArqxHistoryItem {
+    type: "mint" | "burn";
+    status: string;
+    amountAtomic: string;
+    createdAt: number;
+    txid?: string;
+    depositTxid?: string;
+    mintedTxId?: string;
+    paidTxId?: string;
+    wrapTicker?: string;
+    nativeTicker?: string;
+    decimals?: number;
+}
+
+function statusPillClass(status: string | undefined): string {
+    if (!status) return styles.pillMuted;
+    if (status === "minted" || status === "paid") return styles.pillOk;
+    if (status === "rejected" || status === "cancelled" || status === "expired") return styles.pillWarn;
+    if (
+        status === "confirming" ||
+        status === "awaiting_tss" ||
+        status === "awaiting_federation" ||
+        status === "burning" ||
+        status === "minting"
+    ) {
+        return styles.pillInfo;
+    }
+    return styles.pillMuted;
+}
+
+function shortTxid(txid: string | undefined): string {
+    if (!txid) return "—";
+    if (txid.length <= 18) return txid;
+    return `${txid.slice(0, 10)}…${txid.slice(-6)}`;
+}
+
+function formatHistoryTime(createdAt: number): string {
+    if (!createdAt) return "—";
+    try {
+        return new Date(createdAt * 1000).toISOString().replace("T", " ").replace(/\.\d+Z$/, " UTC");
+    } catch {
+        return String(createdAt);
+    }
+}
+
 function BridgeArqxPage() {
     const [status, setStatus] = useState<ArqxBridgeStatus | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [history, setHistory] = useState<ArqxHistoryItem[]>([]);
+    const [historyError, setHistoryError] = useState<string | null>(null);
+    const [historyLoading, setHistoryLoading] = useState(true);
 
     useEffect(() => {
         let stopped = false;
@@ -98,8 +146,34 @@ function BridgeArqxPage() {
             }
         }
 
+        async function loadHistory() {
+            try {
+                const response = await Fetch.getBridgeArqxHistory(50, "all");
+                if (stopped) return;
+                if (!response?.success || !response.data) {
+                    setHistoryError(response?.error || "ARQX bridge history unavailable");
+                    setHistory([]);
+                    setHistoryLoading(false);
+                    return;
+                }
+                const items = Array.isArray(response.data.items) ? response.data.items : [];
+                setHistory(items);
+                setHistoryError(null);
+                setHistoryLoading(false);
+            } catch (err: any) {
+                if (stopped) return;
+                setHistoryError(err?.message || "Failed to load ARQX bridge history");
+                setHistory([]);
+                setHistoryLoading(false);
+            }
+        }
+
         loadStatus();
-        const timer = setInterval(loadStatus, 30000);
+        loadHistory();
+        const timer = setInterval(() => {
+            loadStatus();
+            loadHistory();
+        }, 30000);
         return () => {
             stopped = true;
             clearInterval(timer);
@@ -325,6 +399,91 @@ function BridgeArqxPage() {
                         (wallet balance + on-chain supply).
                     </p>
                 </div>
+            </div>
+
+            <div className={styles.panel}>
+                <div className={styles.panelHead}>
+                    <h3>Bridge history</h3>
+                    <p>
+                        Recent ARQX mint and burn events from the Trade wrap ledger.
+                        Amounts and txids only — no PDC or destination addresses.
+                    </p>
+                </div>
+                {historyError && (
+                    <p className={styles.lookupMsg}>{historyError}</p>
+                )}
+                {!historyError && (
+                    <div className={styles.historyWrap}>
+                        <table className={styles.historyTable}>
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                    <th>Txid</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {historyLoading && history.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5}>Loading…</td>
+                                    </tr>
+                                ) : history.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5}>No mint or burn events yet.</td>
+                                    </tr>
+                                ) : (
+                                    history.map((item, idx) => {
+                                        const itemDecimals = item.decimals ?? decimals;
+                                        const atomic = toBigInt(item.amountAtomic);
+                                        const primary =
+                                            item.type === "mint"
+                                                ? item.mintedTxId || item.depositTxid || item.txid
+                                                : item.paidTxId || item.txid;
+                                        const href =
+                                            item.type === "mint" && item.mintedTxId
+                                                ? `/transaction/${item.mintedTxId}`
+                                                : null;
+                                        return (
+                                            <tr key={`${item.type}-${item.createdAt}-${primary || idx}`}>
+                                                <td>
+                                                    <span
+                                                        className={`${styles.pill} ${
+                                                            item.type === "mint" ? styles.pillOk : styles.pillInfo
+                                                        }`}
+                                                    >
+                                                        {item.type === "mint" ? "Mint" : "Burn"}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {formatAtomic(atomic, itemDecimals)}{" "}
+                                                    {item.wrapTicker || "ARQX"}
+                                                    <em className={styles.historySub}>
+                                                        {formatAtomicGrouped(atomic)} atomic
+                                                    </em>
+                                                </td>
+                                                <td>
+                                                    <span className={`${styles.pill} ${statusPillClass(item.status)}`}>
+                                                        {item.status}
+                                                    </span>
+                                                </td>
+                                                <td>{formatHistoryTime(item.createdAt)}</td>
+                                                <td>
+                                                    {href && primary ? (
+                                                        <a href={href}>{shortTxid(primary)}</a>
+                                                    ) : (
+                                                        shortTxid(primary)
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
 
             <p className={styles.note}>
