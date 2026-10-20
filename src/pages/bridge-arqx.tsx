@@ -78,7 +78,9 @@ interface ArqxHistoryItem {
     txid?: string;
     depositTxid?: string;
     mintedTxId?: string;
+    burnTxId?: string;
     paidTxId?: string;
+    confirmations?: number;
     wrapTicker?: string;
     nativeTicker?: string;
     decimals?: number;
@@ -93,11 +95,30 @@ function statusPillClass(status: string | undefined): string {
         status === "awaiting_tss" ||
         status === "awaiting_federation" ||
         status === "burning" ||
-        status === "minting"
+        status === "minting" ||
+        status === "pending" ||
+        status === "pending_delay"
     ) {
         return styles.pillInfo;
     }
     return styles.pillMuted;
+}
+
+function formatConfirmations(
+    confirmations: number | undefined,
+    minConfirmations: number,
+    status: string
+): string {
+    if (confirmations == null || !Number.isFinite(confirmations)) {
+        if (status === "pending" || status === "pending_delay" || status === "burning") {
+            return "—";
+        }
+        return "—";
+    }
+    if (minConfirmations > 0) {
+        return `${confirmations} / ${minConfirmations}`;
+    }
+    return String(confirmations);
 }
 
 function shortTxid(txid: string | undefined): string {
@@ -122,6 +143,7 @@ function BridgeArqxPage() {
     const [history, setHistory] = useState<ArqxHistoryItem[]>([]);
     const [historyError, setHistoryError] = useState<string | null>(null);
     const [historyLoading, setHistoryLoading] = useState(true);
+    const [historyMinConf, setHistoryMinConf] = useState(10);
     const [arqxUsd, setArqxUsd] = useState<number | null>(null);
     const [btcxUsd, setBtcxUsd] = useState<number | null>(null);
 
@@ -182,6 +204,8 @@ function BridgeArqxPage() {
                 }
                 const items = Array.isArray(response.data.items) ? response.data.items : [];
                 setHistory(items);
+                const minConf = Number(response.data.minConfirmations);
+                if (Number.isFinite(minConf) && minConf > 0) setHistoryMinConf(minConf);
                 setHistoryError(null);
                 setHistoryLoading(false);
             } catch (err: any) {
@@ -450,6 +474,7 @@ function BridgeArqxPage() {
                                     <th>Type</th>
                                     <th>Amount</th>
                                     <th>Status</th>
+                                    <th>Conf</th>
                                     <th>Time</th>
                                     <th>Txid</th>
                                 </tr>
@@ -457,11 +482,11 @@ function BridgeArqxPage() {
                             <tbody>
                                 {historyLoading && history.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5}>Loading…</td>
+                                        <td colSpan={6}>Loading…</td>
                                     </tr>
                                 ) : history.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5}>No mint or burn events yet.</td>
+                                        <td colSpan={6}>No mint or burn events yet.</td>
                                     </tr>
                                 ) : (
                                     history.map((item, idx) => {
@@ -472,11 +497,22 @@ function BridgeArqxPage() {
                                         const primary =
                                             item.type === "mint"
                                                 ? item.mintedTxId || item.depositTxid || item.txid
-                                                : item.paidTxId || item.txid;
+                                                : item.burnTxId || item.paidTxId || item.txid;
                                         const href =
                                             item.type === "mint" && item.mintedTxId
                                                 ? `/transaction/${item.mintedTxId}`
-                                                : null;
+                                                : item.type === "burn" && item.burnTxId
+                                                    ? `/transaction/${item.burnTxId}`
+                                                    : null;
+                                        const confLabel = formatConfirmations(
+                                            item.confirmations,
+                                            historyMinConf,
+                                            item.status
+                                        );
+                                        const txidLabel =
+                                            !primary && item.type === "burn" && item.status === "pending"
+                                                ? "awaiting payout"
+                                                : shortTxid(primary);
                                         return (
                                             <tr key={`${item.type}-${item.createdAt}-${primary || idx}`}>
                                                 <td>
@@ -500,12 +536,13 @@ function BridgeArqxPage() {
                                                         {item.status}
                                                     </span>
                                                 </td>
+                                                <td>{confLabel}</td>
                                                 <td>{formatHistoryTime(item.createdAt)}</td>
                                                 <td>
                                                     {href && primary ? (
                                                         <a href={href}>{shortTxid(primary)}</a>
                                                     ) : (
-                                                        shortTxid(primary)
+                                                        txidLabel
                                                     )}
                                                 </td>
                                             </tr>
