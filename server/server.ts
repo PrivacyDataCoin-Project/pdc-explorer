@@ -972,19 +972,58 @@ async function waitForDb() {
         exceptionHandler(async (_req, res) => {
             const tradeBase = (config.trade_api_url || 'https://api.trade.privacydatacoin.com/api').replace(/\/$/, '');
             try {
-                const response = await axios.get(`${tradeBase}/ticker`, { timeout: 15000 });
-                const tickers = Array.isArray(response.data?.tickers) ? response.data.tickers : [];
+                const [tickerResponse, usdResponse] = await Promise.all([
+                    axios.get(`${tradeBase}/ticker`, { timeout: 15000 }),
+                    axios.get(`${tradeBase}/prices/usd`, { timeout: 15000 }).catch(() => null),
+                ]);
+                const tickers = Array.isArray(tickerResponse.data?.tickers) ? tickerResponse.data.tickers : [];
+                const usdBook = (usdResponse?.data?.prices && typeof usdResponse.data.prices === 'object')
+                    ? usdResponse.data.prices as Record<string, number>
+                    : {};
+
                 const pdcBtcx = tickers.find((t: any) =>
                     t?.symbol === 'PDC-BTCX'
                     || (t?.base === 'PDC' && t?.quote === 'BTCX')
                 );
+                const arqxBtcx = tickers.find((t: any) =>
+                    t?.symbol === 'ARQX-BTCX'
+                    || (t?.base === 'ARQX' && t?.quote === 'BTCX')
+                );
+
                 const usd = Number(pdcBtcx?.lastUsd);
                 const btcx = Number(pdcBtcx?.last);
                 if (!Number.isFinite(usd) || usd <= 0 || !Number.isFinite(btcx) || btcx <= 0) {
                     res.status(502).json({ success: false, error: 'PDC market price not available' });
                     return;
                 }
-                const btcxUsd = usd / btcx;
+                const btcxUsdFromBook = Number(usdBook.BTCX);
+                const btcxUsd = (Number.isFinite(btcxUsdFromBook) && btcxUsdFromBook > 0)
+                    ? btcxUsdFromBook
+                    : usd / btcx;
+
+                const arqxLastUsd = Number(arqxBtcx?.lastUsd);
+                const arqxLast = Number(arqxBtcx?.last);
+                const arqxBid = Number(arqxBtcx?.bid);
+                const arqxAsk = Number(arqxBtcx?.ask);
+                const arqxMid = (Number.isFinite(arqxBid) && arqxBid > 0 && Number.isFinite(arqxAsk) && arqxAsk > 0)
+                    ? (arqxBid + arqxAsk) / 2
+                    : (Number.isFinite(arqxBid) && arqxBid > 0
+                        ? arqxBid
+                        : (Number.isFinite(arqxAsk) && arqxAsk > 0 ? arqxAsk : NaN));
+                const arqxInBtcx = Number.isFinite(arqxLast) && arqxLast > 0
+                    ? arqxLast
+                    : arqxMid;
+                const arqxUsdFromBook = Number(usdBook.ARQX);
+                let arqxUsd = Number.isFinite(arqxLastUsd) && arqxLastUsd > 0
+                    ? arqxLastUsd
+                    : (Number.isFinite(arqxInBtcx) && arqxInBtcx > 0 && btcxUsd > 0
+                        ? arqxInBtcx * btcxUsd
+                        : NaN);
+                if (!(Number.isFinite(arqxUsd) && arqxUsd > 0)
+                    && Number.isFinite(arqxUsdFromBook) && arqxUsdFromBook > 0) {
+                    arqxUsd = arqxUsdFromBook;
+                }
+
                 res.json({
                     success: true,
                     data: {
@@ -993,8 +1032,10 @@ async function waitForDb() {
                         btcx,
                         pdcUsd: usd,
                         btcxUsd,
+                        arqxUsd: Number.isFinite(arqxUsd) && arqxUsd > 0 ? arqxUsd : null,
+                        arqxBtcx: Number.isFinite(arqxInBtcx) && arqxInBtcx > 0 ? arqxInBtcx : null,
                         source: 'trade',
-                        timestamp: pdcBtcx.timestamp ?? null,
+                        timestamp: pdcBtcx.timestamp ?? arqxBtcx?.timestamp ?? null,
                     },
                 });
             } catch (error: any) {

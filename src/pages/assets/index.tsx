@@ -24,10 +24,19 @@ function assetSourceLink(assetId?: string) {
     if (assetId === PDC_ASSET_ID) {
         return <Link href={NETWORK.website} target="_blank" rel="noreferrer">Website</Link>;
     }
-    if (assetId === BTCX_ASSET_ID || assetId === ARQX_ASSET_ID) {
+    if (assetId === BTCX_ASSET_ID) {
         return <Link href={NETWORK.tradeWebsite} target="_blank" rel="noreferrer">Website</Link>;
     }
+    if (assetId === ARQX_ASSET_ID) {
+        return <Link href={NETWORK.arqmaWebsite} target="_blank" rel="noreferrer">Website</Link>;
+    }
     return "—";
+}
+
+function formatUsdPrice(value: number): string {
+    if (value >= 1) return value.toFixed(2);
+    if (value >= 0.01) return value.toFixed(4);
+    return value.toFixed(6);
 }
 
 
@@ -108,6 +117,7 @@ function Assets(props: AssetsPageProps) {
             const market = await Fetch.getPdcMarket();
             const pdcUsd = Number(market?.data?.pdcUsd ?? market?.data?.usd);
             const btcxUsd = Number(market?.data?.btcxUsd);
+            const arqxUsd = Number(market?.data?.arqxUsd);
             const pdcInBtcx = Number(market?.data?.btcx);
             const resolvedBtcxUsd = Number.isFinite(btcxUsd) && btcxUsd > 0
                 ? btcxUsd
@@ -117,10 +127,13 @@ function Assets(props: AssetsPageProps) {
 
             return list.map((asset) => {
                 if (asset?.asset_id === PDC_ASSET_ID && Number.isFinite(pdcUsd) && pdcUsd > 0) {
-                    return { ...asset, price: pdcUsd.toFixed(2) };
+                    return { ...asset, price: formatUsdPrice(pdcUsd) };
                 }
                 if (asset?.asset_id === BTCX_ASSET_ID && Number.isFinite(resolvedBtcxUsd) && resolvedBtcxUsd > 0) {
-                    return { ...asset, price: resolvedBtcxUsd.toFixed(2) };
+                    return { ...asset, price: formatUsdPrice(resolvedBtcxUsd) };
+                }
+                if (asset?.asset_id === ARQX_ASSET_ID && Number.isFinite(arqxUsd) && arqxUsd > 0) {
+                    return { ...asset, price: formatUsdPrice(arqxUsd) };
                 }
                 return asset;
             });
@@ -233,7 +246,11 @@ function Assets(props: AssetsPageProps) {
 
                 if (assetsPriceRatesResponse?.success && pdcPrice && Array.isArray(assetsPriceRates)) {
                     resultAssets = resultAssets.map((resultAsset: any) => {
-                        if (resultAsset?.asset_id === PDC_ASSET_ID || resultAsset?.asset_id === BTCX_ASSET_ID) {
+                        if (
+                            resultAsset?.asset_id === PDC_ASSET_ID
+                            || resultAsset?.asset_id === BTCX_ASSET_ID
+                            || resultAsset?.asset_id === ARQX_ASSET_ID
+                        ) {
                             return resultAsset;
                         }
                         const targetAsset = assetsPriceRates.find((asset: any) => asset.asset_id === resultAsset.asset_id);

@@ -29,6 +29,7 @@ export const NETWORK = {
     release: "v2.1.0",
     website: "https://privacydatacoin.com/",
     tradeWebsite: "https://trade.privacydatacoin.com/",
+    arqmaWebsite: "https://arqma.com",
     uiRepo: "https://github.com/PrivacyDataCoin-Project/PDC/releases",
     siteRepo: "https://github.com/PrivacyDataCoin-Project/PrivacyDataCoin-Project.github.io",
 } as const;

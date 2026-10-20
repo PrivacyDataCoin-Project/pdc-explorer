@@ -7,7 +7,7 @@ import { latestBlocksInitState } from "@/components/default/LatestBlocks/LatestB
 import Utils from "./utils";
 import { DEFAULT_ITEMS_ON_PAGE } from "@/pages/aliases";
 import { DEFAULT_ASSETS_ON_PAGE } from "@/pages/assets";
-import { BTCX_ASSET_ID, PDC_ASSET_ID } from "./constants";
+import { ARQX_ASSET_ID, BTCX_ASSET_ID, PDC_ASSET_ID } from "./constants";
 import { GetServerSidePropsContext } from "next";
 
 export async function getMainPageProps() {
@@ -263,10 +263,17 @@ export async function getAssets() {
 
         let pdcUsd: number | undefined;
         let btcxUsd: number | undefined;
+        let arqxUsd: number | undefined;
+        const formatUsd = (value: number) => {
+            if (value >= 1) return value.toFixed(2);
+            if (value >= 0.01) return value.toFixed(4);
+            return value.toFixed(6);
+        };
         try {
             const market = await Fetch.getPdcMarket();
             pdcUsd = Number(market?.data?.pdcUsd ?? market?.data?.usd);
             btcxUsd = Number(market?.data?.btcxUsd);
+            arqxUsd = Number(market?.data?.arqxUsd);
             const pdcInBtcx = Number(market?.data?.btcx);
             if (!(Number.isFinite(btcxUsd) && btcxUsd > 0)
                 && Number.isFinite(pdcUsd) && (pdcUsd as number) > 0
@@ -279,10 +286,13 @@ export async function getAssets() {
 
         assets.forEach((element: any) => {
             if (element.asset_id === PDC_ASSET_ID && Number.isFinite(pdcUsd) && (pdcUsd as number) > 0) {
-                element.price = (pdcUsd as number).toFixed(2);
+                element.price = formatUsd(pdcUsd as number);
             }
             if (element.asset_id === BTCX_ASSET_ID && Number.isFinite(btcxUsd) && (btcxUsd as number) > 0) {
-                element.price = (btcxUsd as number).toFixed(2);
+                element.price = formatUsd(btcxUsd as number);
+            }
+            if (element.asset_id === ARQX_ASSET_ID && Number.isFinite(arqxUsd) && (arqxUsd as number) > 0) {
+                element.price = formatUsd(arqxUsd as number);
             }
         });
 
