@@ -510,8 +510,12 @@ function BridgeArqxPage() {
                                             item.status
                                         );
                                         const txidLabel =
-                                            !primary && item.type === "burn" && item.status === "pending"
-                                                ? "awaiting payout"
+                                            !primary && item.type === "burn"
+                                                ? item.status === "pending" || item.status === "pending_delay"
+                                                    ? "awaiting burn"
+                                                    : item.status === "cancelled" || item.status === "rejected"
+                                                        ? "no tx (expired)"
+                                                        : "awaiting payout"
                                                 : shortTxid(primary);
                                         return (
                                             <tr key={`${item.type}-${item.createdAt}-${primary || idx}`}>
