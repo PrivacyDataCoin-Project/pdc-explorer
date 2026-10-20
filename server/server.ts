@@ -19,6 +19,7 @@ import Chart, { IChart } from "./schemes/Chart";
 import { get_all_pool_tx_list, get_alt_blocks_details, get_blocks_details, get_info, get_out_info, get_pool_txs_details, get_tx_details } from "./utils/pdcd";
 import { getNodeMap } from "./utils/nodeMap";
 import { getNodeHealth } from "./utils/nodeHealth";
+import { getCachedBridgeStatus } from "./utils/bridgeStatusCache";
 import { fn, literal, Op, Sequelize } from "sequelize";
 import Pool from "./schemes/Pool";
 import Asset, { IAsset } from "./schemes/Asset";
@@ -955,8 +956,8 @@ async function waitForDb() {
         exceptionHandler(async (_req, res) => {
             const tradeBase = (config.trade_api_url || 'https://api.trade.privacydatacoin.com/api').replace(/\/$/, '');
             try {
-                const response = await axios.get(`${tradeBase}/bridge/status`, { timeout: 15000 });
-                res.json({ success: true, data: response.data });
+                const data = await getCachedBridgeStatus(tradeBase);
+                res.json({ success: true, data });
             } catch (error: any) {
                 const message = error?.response?.data?.message
                     || error?.message
