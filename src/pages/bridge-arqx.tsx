@@ -4,6 +4,7 @@ import Fetch from "@/utils/methods";
 import CopyButton from "@/components/UI/CopyButton/CopyButton";
 import BridgeTabs from "@/components/default/BridgeTabs/BridgeTabs";
 import { ARQX_ASSET_ID, ARQX_DEPOSIT_ADDRESS, NETWORK } from "@/config/network";
+import { amountFromAtomic, holdingValueHint } from "@/utils/marketPrice";
 import Link from "next/link";
 
 interface ArqxBridgeStatus {
@@ -121,9 +122,32 @@ function BridgeArqxPage() {
     const [history, setHistory] = useState<ArqxHistoryItem[]>([]);
     const [historyError, setHistoryError] = useState<string | null>(null);
     const [historyLoading, setHistoryLoading] = useState(true);
+    const [arqxUsd, setArqxUsd] = useState<number | null>(null);
+    const [btcxUsd, setBtcxUsd] = useState<number | null>(null);
 
     useEffect(() => {
         let stopped = false;
+
+        async function loadMarket() {
+            try {
+                const result = await Fetch.getPdcMarket();
+                if (stopped) return;
+                const usd = Number(result?.data?.arqxUsd);
+                const btcx = Number(result?.data?.btcxUsd);
+                if (result?.success && Number.isFinite(usd) && usd > 0 && Number.isFinite(btcx) && btcx > 0) {
+                    setArqxUsd(usd);
+                    setBtcxUsd(btcx);
+                    return;
+                }
+                setArqxUsd(null);
+                setBtcxUsd(null);
+            } catch {
+                if (!stopped) {
+                    setArqxUsd(null);
+                    setBtcxUsd(null);
+                }
+            }
+        }
 
         async function loadStatus() {
             try {
@@ -170,9 +194,11 @@ function BridgeArqxPage() {
 
         loadStatus();
         loadHistory();
+        loadMarket();
         const timer = setInterval(() => {
             loadStatus();
             loadHistory();
+            loadMarket();
         }, 30000);
         return () => {
             stopped = true;
@@ -192,6 +218,10 @@ function BridgeArqxPage() {
     const barPct = coverageRatio(pool, liability);
     const custodyMode = status?.custodyMode || "cn_wallet";
     const custodyLabel = custodyMode === "tss" ? "TSS" : "Bridge wallet";
+    const poolAmount = amountFromAtomic(pool.toString(), decimals);
+    const liabilityAmount = amountFromAtomic(liability.toString(), decimals);
+    const poolHint = holdingValueHint(poolAmount, arqxUsd, btcxUsd);
+    const liabilityHint = holdingValueHint(liabilityAmount, arqxUsd, btcxUsd);
 
     return (
         <section className={styles.page} aria-label="Bridge ARQX peg">
@@ -237,12 +267,12 @@ function BridgeArqxPage() {
                 <article className={styles.card}>
                     <span>ARQ in bridge wallet</span>
                     <strong className={styles.mono}>{formatAtomic(pool, decimals)} ARQ</strong>
-                    <em>{formatAtomicGrouped(pool)} atomic</em>
+                    <em>{poolHint || "—"}</em>
                 </article>
                 <article className={styles.card}>
                     <span>ARQX minted liability</span>
                     <strong className={styles.mono}>{formatAtomic(liability, decimals)} ARQX</strong>
-                    <em>{formatAtomicGrouped(liability)} atomic</em>
+                    <em>{liabilityHint || "—"}</em>
                 </article>
                 <article className={styles.card}>
                     <span>Coverage ratio</span>
@@ -437,6 +467,8 @@ function BridgeArqxPage() {
                                     history.map((item, idx) => {
                                         const itemDecimals = item.decimals ?? decimals;
                                         const atomic = toBigInt(item.amountAtomic);
+                                        const amount = amountFromAtomic(atomic.toString(), itemDecimals);
+                                        const priceHint = holdingValueHint(amount, arqxUsd, btcxUsd);
                                         const primary =
                                             item.type === "mint"
                                                 ? item.mintedTxId || item.depositTxid || item.txid
@@ -460,7 +492,7 @@ function BridgeArqxPage() {
                                                     {formatAtomic(atomic, itemDecimals)}{" "}
                                                     {item.wrapTicker || "ARQX"}
                                                     <em className={styles.historySub}>
-                                                        {formatAtomicGrouped(atomic)} atomic
+                                                        {priceHint || "—"}
                                                     </em>
                                                 </td>
                                                 <td>

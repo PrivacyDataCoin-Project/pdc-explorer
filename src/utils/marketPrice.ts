@@ -32,6 +32,23 @@ export function formatMarketHint(usd: number, btcx: number): string {
     return `${usdText} · ${btcxText}`;
 }
 
+/**
+ * Holding value from a Trade unit USD price: `$ (amount × usd/unit) · (that USD ÷ BTCX/USD) BTCX`.
+ * Same rule as Bridge BTCX (where usd/unit = btcxUsd ⇒ BTCX leg equals `amount`).
+ */
+export function holdingValueHint(
+    amount: number | null | undefined,
+    usdPerUnit: number | null | undefined,
+    btcxUsd: number | null | undefined
+): string {
+    if (amount == null || usdPerUnit == null || btcxUsd == null) return "";
+    if (!Number.isFinite(amount) || amount < 0) return "";
+    if (!Number.isFinite(usdPerUnit) || usdPerUnit <= 0) return "";
+    if (!Number.isFinite(btcxUsd) || btcxUsd <= 0) return "";
+    const usd = amount * usdPerUnit;
+    return formatMarketHint(usd, usd / btcxUsd);
+}
+
 export function amountFromAtomic(value: string | number | undefined, decimals = 12): number | null {
     if (value == null || value === "") return null;
     const digits = String(value).replace(/[^\d]/g, "");

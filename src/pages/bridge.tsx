@@ -3,6 +3,7 @@ import styles from "@/styles/Bridge.module.scss";
 import Fetch from "@/utils/methods";
 import CopyButton from "@/components/UI/CopyButton/CopyButton";
 import BridgeTabs from "@/components/default/BridgeTabs/BridgeTabs";
+import { amountFromAtomic, holdingValueHint } from "@/utils/marketPrice";
 
 /** Public TSS deposit address for the BTCX peg (not always present in status JSON). */
 export const BTCX_TSS_ADDRESS = "bc1q7qlagem4lsp02x8uq2mx0zrrdjvn8m8k8lcn3d";
@@ -147,9 +148,25 @@ function BridgePage() {
     const [history, setHistory] = useState<BridgeHistoryItem[]>([]);
     const [historyError, setHistoryError] = useState<string | null>(null);
     const [historyLoading, setHistoryLoading] = useState(true);
+    const [btcxUsd, setBtcxUsd] = useState<number | null>(null);
 
     useEffect(() => {
         let stopped = false;
+
+        async function loadMarket() {
+            try {
+                const result = await Fetch.getPdcMarket();
+                if (stopped) return;
+                const usd = Number(result?.data?.btcxUsd);
+                if (result?.success && Number.isFinite(usd) && usd > 0) {
+                    setBtcxUsd(usd);
+                    return;
+                }
+                setBtcxUsd(null);
+            } catch {
+                if (!stopped) setBtcxUsd(null);
+            }
+        }
 
         async function load() {
             try {
@@ -195,9 +212,11 @@ function BridgePage() {
 
         load();
         loadHistory();
+        loadMarket();
         const timer = setInterval(() => {
             load();
             loadHistory();
+            loadMarket();
         }, 30000);
         return () => {
             stopped = true;
@@ -256,6 +275,10 @@ function BridgePage() {
         : null;
     const coverage = coverageLabel(pool, liability);
     const barPct = coverageRatio(pool, liability);
+    const poolBtc = amountFromAtomic(pool.toString(), 8);
+    const liabilityBtc = amountFromAtomic(liability.toString(), 8);
+    const poolHint = holdingValueHint(poolBtc, btcxUsd, btcxUsd);
+    const liabilityHint = holdingValueHint(liabilityBtc, btcxUsd, btcxUsd);
 
     return (
         <section className={styles.page} aria-label="Bridge BTCX peg">
@@ -298,12 +321,12 @@ function BridgePage() {
                 <article className={styles.card}>
                     <span>BTC in TSS pool</span>
                     <strong className={styles.mono}>{satsToBtc(pool)} BTC</strong>
-                    <em>{formatSats(pool)} sats</em>
+                    <em>{poolHint || "—"}</em>
                 </article>
                 <article className={styles.card}>
                     <span>BTCX minted liability</span>
                     <strong className={styles.mono}>{satsToBtc(liability)} BTCX</strong>
-                    <em>{formatSats(liability)} sats</em>
+                    <em>{liabilityHint || "—"}</em>
                 </article>
                 <article className={styles.card}>
                     <span>Coverage ratio</span>
@@ -373,6 +396,9 @@ function BridgePage() {
                                     </tr>
                                 ) : (
                                     history.map((item, idx) => {
+                                        const amountSats = toBigInt(item.amountSats);
+                                        const amountBtc = amountFromAtomic(amountSats.toString(), 8);
+                                        const priceHint = holdingValueHint(amountBtc, btcxUsd, btcxUsd);
                                         const primary =
                                             item.type === "mint"
                                                 ? item.btcTxid || item.mintedTxId || item.txid
@@ -402,9 +428,9 @@ function BridgePage() {
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    {formatSats(toBigInt(item.amountSats))} sats
+                                                    {satsToBtc(amountSats)} BTCX
                                                     <em className={styles.historySub}>
-                                                        {satsToBtc(toBigInt(item.amountSats))} BTCX
+                                                        {priceHint || "—"}
                                                     </em>
                                                 </td>
                                                 <td>
