@@ -54,13 +54,20 @@ const SHARED: Omit<HardforkDef, "afterHeight">[] = [
     {
         id: 7,
         label: "v7",
-        name: "Current rules",
-        description: "Highest ruleset. Activates with HF5 and HF6. Minimum daemon build 4.",
+        name: "Ruleset 7",
+        description: "Activates with HF5 and HF6. Minimum daemon build 4.",
+    },
+    {
+        id: 8,
+        label: "v8",
+        name: "Upgrade gate",
+        description:
+            "Requires daemon build 11+. Drops peers below that build before the PoS strict sequence limit.",
     },
 ];
 
-const MAINNET_HEIGHTS = [0, 20, 40, 60, 100, 1199, 1199, 1199];
-const TESTNET_HEIGHTS = [0, 0, 0, 0, 100, 1199, 1199, 1199];
+const MAINNET_HEIGHTS = [0, 20, 40, 60, 100, 1199, 1199, 1199, 50000];
+const TESTNET_HEIGHTS = [0, 0, 0, 0, 100, 1199, 1199, 1199, 15000];
 
 function withHeights(heights: number[]): HardforkDef[] {
     return SHARED.map((fork, index) => ({

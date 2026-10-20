@@ -143,7 +143,8 @@ function NodeHealthPage() {
                     </tbody>
                 </table>
                 <p className={styles.note}>
-                    HF5, HF6, and HF7 share activation after height 1199. The highest active ruleset is marked active.
+                    HF5, HF6, and HF7 share activation after height 1199. HF8 activates after height 50000
+                    (testnet: 15000). The highest active ruleset is marked active.
                 </p>
             </div>
         </section>
