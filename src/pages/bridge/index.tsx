@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import styles from "@/styles/Bridge.module.scss";
 import Fetch from "@/utils/methods";
 import CopyButton from "@/components/UI/CopyButton/CopyButton";
+import BridgeTabs from "@/components/default/BridgeTabs/BridgeTabs";
 
 /** Public TSS deposit address for the BTCX peg (not always present in status JSON). */
 export const BTCX_TSS_ADDRESS = "bc1q7qlagem4lsp02x8uq2mx0zrrdjvn8m8k8lcn3d";
@@ -258,6 +259,7 @@ function BridgePage() {
 
     return (
         <section className={styles.page} aria-label="Bridge BTCX peg">
+            <BridgeTabs />
             <div className={styles.head}>
                 <div>
                     <div className={styles.titleRow}>
@@ -268,7 +270,7 @@ function BridgePage() {
                             width={28}
                             height={28}
                         />
-                        <h2>Bridge / BTCX peg</h2>
+                        <h2>Bridge BTCX</h2>
                         <div className={styles.pills}>
                             <span className={`${styles.pill} ${reservesOk ? styles.pillOk : styles.pillWarn}`}>
                                 {reservesOk ? "Reserves OK" : "Reserves check failed"}

@@ -117,6 +117,10 @@ class Fetch {
         return await fetch(this.proxyPath + "/bridge_status").then(res => res.json());
     }
 
+    static async getBridgeArqxStatus() {
+        return await fetch(this.proxyPath + "/bridge_arqx_status").then(res => res.json());
+    }
+
     static async getPdcMarket() {
         return await fetch(this.proxyPath + "/pdc_market").then(res => res.json());
     }

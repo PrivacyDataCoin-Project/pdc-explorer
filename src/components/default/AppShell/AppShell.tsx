@@ -18,7 +18,8 @@ const EXPLORER_LINKS = [
     { href: "/alt-blocks", label: "Alt-blocks", icon: "alt" },
     { href: "/aliases", label: "Aliases", icon: "alias" },
     { href: "/assets", label: "Assets", icon: "asset" },
-    { href: "/bridge", label: "Bridge", icon: "bridge" },
+    { href: "/bridge", label: "Bridge BTCX", icon: "bridge" },
+    { href: "/bridge/arqx", label: "Bridge ARQX", icon: "bridge" },
     { href: "/charts", label: "Charts", icon: "chart" },
     { href: "/pdc_api", label: "API", icon: "api" },
 ];
@@ -34,6 +35,8 @@ function isActive(href: string, pathname: string) {
     if (href === "/") return pathname === "/";
     if (href === "/charts") return pathname === "/charts" || pathname.startsWith("/chart/");
     if (href === "/assets") return pathname === "/assets" || pathname.startsWith("/asset");
+    // Exact match for /bridge so /bridge/arqx does not highlight Bridge BTCX.
+    if (href === "/bridge") return pathname === "/bridge";
     return pathname === href || pathname.startsWith(`${href}/`);
 }
 

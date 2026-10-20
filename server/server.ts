@@ -968,6 +968,22 @@ async function waitForDb() {
     );
 
     app.get(
+        '/api/bridge_arqx_status',
+        exceptionHandler(async (_req, res) => {
+            const tradeBase = (config.trade_api_url || 'https://api.trade.privacydatacoin.com/api').replace(/\/$/, '');
+            try {
+                const response = await axios.get(`${tradeBase}/bridge/arqx/status`, { timeout: 15000 });
+                res.json({ success: true, data: response.data });
+            } catch (error: any) {
+                const message = error?.response?.data?.message
+                    || error?.message
+                    || 'Failed to fetch ARQX bridge status';
+                res.status(502).json({ success: false, error: message });
+            }
+        })
+    );
+
+    app.get(
         '/api/pdc_market',
         exceptionHandler(async (_req, res) => {
             const tradeBase = (config.trade_api_url || 'https://api.trade.privacydatacoin.com/api').replace(/\/$/, '');
