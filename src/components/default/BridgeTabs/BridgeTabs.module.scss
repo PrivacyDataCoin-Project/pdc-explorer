@@ -11,6 +11,7 @@
 .tab {
     display: inline-flex;
     align-items: center;
+    gap: 8px;
     padding: 8px 14px;
     border-radius: 9px;
     font-size: 11px;
@@ -20,6 +21,14 @@
     color: var(--faint);
     text-decoration: none;
     transition: color 0.15s ease, background 0.15s ease;
+}
+
+.icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    flex-shrink: 0;
+    border-radius: 50%;
 }
 
 .tab:hover {

@@ -3,8 +3,8 @@ import { useRouter } from "next/router";
 import styles from "./BridgeTabs.module.scss";
 
 const TABS = [
-    { href: "/bridge", label: "Bridge BTCX" },
-    { href: "/bridge-arqx", label: "Bridge ARQX" },
+    { href: "/bridge", label: "Bridge BTCX", icon: "/currency-icons/wbtc.svg" },
+    { href: "/bridge-arqx", label: "Bridge ARQX", icon: "/currency-icons/arq.png" },
 ] as const;
 
 export default function BridgeTabs() {
@@ -23,6 +23,7 @@ export default function BridgeTabs() {
                         aria-selected={active}
                         className={`${styles.tab} ${active ? styles.active : ""}`}
                     >
+                        <img className={styles.icon} src={tab.icon} alt="" width={16} height={16} aria-hidden />
                         {tab.label}
                     </Link>
                 );

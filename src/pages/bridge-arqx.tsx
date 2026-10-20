@@ -114,7 +114,7 @@ function BridgeArqxPage() {
                     <div className={styles.titleRow}>
                         <img
                             className={styles.icon}
-                            src="/currency-icons/arqx.svg"
+                            src="/currency-icons/arq.png"
                             alt=""
                             width={28}
                             height={28}

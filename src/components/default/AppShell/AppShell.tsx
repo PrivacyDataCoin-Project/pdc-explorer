@@ -18,8 +18,8 @@ const EXPLORER_LINKS = [
     { href: "/alt-blocks", label: "Alt-blocks", icon: "alt" },
     { href: "/aliases", label: "Aliases", icon: "alias" },
     { href: "/assets", label: "Assets", icon: "asset" },
-    { href: "/bridge", label: "Bridge BTCX", icon: "bridge" },
-    { href: "/bridge-arqx", label: "Bridge ARQX", icon: "bridge" },
+    { href: "/bridge", label: "Bridge BTCX", icon: "btcx" },
+    { href: "/bridge-arqx", label: "Bridge ARQX", icon: "arq" },
     { href: "/charts", label: "Charts", icon: "chart" },
     { href: "/pdc_api", label: "API", icon: "api" },
 ];
@@ -97,6 +97,16 @@ function Icon({ name }: { name: string }) {
                 <path d="M2.5 11.5c1.8-3.5 4-5.2 5.5-5.2s3.7 1.7 5.5 5.2" stroke="currentColor" strokeLinecap="round" />
                 <path d="M4 11.5h8M5.5 8.2V5.5M10.5 8.2V5.5" stroke="currentColor" strokeLinecap="round" />
             </svg>
+        );
+    }
+    if (name === "btcx") {
+        return (
+            <img className={styles.navGlyph} src="/currency-icons/wbtc.svg" alt="" width={16} height={16} aria-hidden />
+        );
+    }
+    if (name === "arq") {
+        return (
+            <img className={styles.navGlyph} src="/currency-icons/arq.png" alt="" width={16} height={16} aria-hidden />
         );
     }
     if (name === "chart") {

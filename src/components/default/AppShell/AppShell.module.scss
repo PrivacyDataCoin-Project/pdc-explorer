@@ -109,6 +109,14 @@
     text-transform: uppercase;
 }
 
+.navGlyph {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    flex-shrink: 0;
+    border-radius: 50%;
+}
+
 .link,
 .linkActive {
     display: flex;
