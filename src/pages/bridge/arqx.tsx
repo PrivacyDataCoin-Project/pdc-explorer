@@ -32,7 +32,8 @@ function formatAtomic(atomic: string | number | undefined | null, decimals: numb
         if (raw === BigInt(0)) return "0";
         const neg = raw < BigInt(0);
         const v = neg ? -raw : raw;
-        const base = BigInt(10) ** BigInt(decimals);
+        // Avoid BigInt ** (ES2016+) — build target is ES5.
+        const base = BigInt(`1${"0".repeat(Math.max(0, decimals))}`);
         const whole = v / base;
         const frac = (v % base).toString().padStart(decimals, "0").replace(/0+$/, "");
         const body = frac ? `${whole}.${frac}` : whole.toString();
