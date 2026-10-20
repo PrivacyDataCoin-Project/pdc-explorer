@@ -22,32 +22,57 @@ interface ArqxBridgeStatus {
     mintOwnerHint?: string;
     watcherReady?: boolean;
     watcherTodo?: string;
+    minConfirmations?: number;
+    poolAtomic?: string | number;
+    unlockedPoolAtomic?: string | number;
+    liabilityAtomic?: string | number;
+    reservesOk?: boolean;
+    custodyMode?: string;
     updatedAt?: number;
 }
 
-function formatAtomic(atomic: string | number | undefined | null, decimals: number): string {
-    if (atomic === undefined || atomic === null || atomic === "") return "0";
+function toBigInt(value: string | number | undefined | null): bigint {
+    if (value === undefined || value === null || value === "") return BigInt(0);
     try {
-        const raw = typeof atomic === "number" ? BigInt(Math.trunc(atomic)) : BigInt(atomic);
-        if (raw === BigInt(0)) return "0";
-        const neg = raw < BigInt(0);
-        const v = neg ? -raw : raw;
-        // Avoid BigInt ** (ES2016+) — build target is ES5.
-        const base = BigInt(`1${"0".repeat(Math.max(0, decimals))}`);
-        const whole = v / base;
-        const frac = (v % base).toString().padStart(decimals, "0").replace(/0+$/, "");
-        const body = frac ? `${whole}.${frac}` : whole.toString();
-        return neg ? `-${body}` : body;
+        return BigInt(typeof value === "number" ? Math.trunc(value) : value);
     } catch {
-        return String(atomic);
+        return BigInt(0);
     }
+}
+
+function formatAtomic(atomic: bigint, decimals: number): string {
+    if (atomic === BigInt(0)) return "0";
+    const neg = atomic < BigInt(0);
+    const v = neg ? -atomic : atomic;
+    const base = BigInt(`1${"0".repeat(Math.max(0, decimals))}`);
+    const whole = v / base;
+    const frac = (v % base).toString().padStart(decimals, "0").replace(/0+$/, "");
+    const body = frac ? `${whole}.${frac}` : whole.toString();
+    return neg ? `-${body}` : body;
+}
+
+function formatAtomicGrouped(atomic: bigint): string {
+    return atomic.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function coverageLabel(pool: bigint, liability: bigint): string {
+    if (liability === BigInt(0)) {
+        return pool > BigInt(0) ? "Fully covered" : "Unfunded";
+    }
+    const pct = Number((pool * BigInt(10000)) / liability) / 100;
+    return `${pct.toFixed(2)}%`;
+}
+
+function coverageRatio(pool: bigint, liability: bigint): number {
+    if (liability === BigInt(0)) return pool > BigInt(0) ? 100 : 0;
+    const pct = Number((pool * BigInt(10000)) / liability) / 100;
+    return Math.max(0, Math.min(100, pct));
 }
 
 function BridgeArqxPage() {
     const [status, setStatus] = useState<ArqxBridgeStatus | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const [supplyAtomic, setSupplyAtomic] = useState<string | null>(null);
 
     useEffect(() => {
         let stopped = false;
@@ -73,38 +98,26 @@ function BridgeArqxPage() {
             }
         }
 
-        async function loadSupply() {
-            try {
-                const response = await Fetch.getAssetDetails(ARQX_ASSET_ID);
-                if (stopped) return;
-                const asset = response?.success ? response.asset : null;
-                const supply = asset?.current_supply;
-                if (supply != null) setSupplyAtomic(String(supply));
-            } catch {
-                // optional enrichment
-            }
-        }
-
         loadStatus();
-        loadSupply();
-        const timer = setInterval(() => {
-            loadStatus();
-            loadSupply();
-        }, 30000);
+        const timer = setInterval(loadStatus, 30000);
         return () => {
             stopped = true;
             clearInterval(timer);
         };
     }, []);
 
+    const decimals = status?.decimals ?? 9;
+    const pool = toBigInt(status?.poolAtomic);
+    const liability = toBigInt(status?.liabilityAtomic);
+    const reservesOk = status?.reservesOk ?? (pool >= liability);
     const ready = status?.ready ?? false;
     const watcherReady = status?.watcherReady ?? false;
-    const depositEnabled = status?.depositEnabled ?? false;
-    const withdrawEnabled = status?.withdrawEnabled ?? false;
-    const decimals = status?.decimals ?? 9;
     const assetId = status?.assetId || ARQX_ASSET_ID;
-    const circulating = formatAtomic(supplyAtomic, decimals);
-    const confirmations = 10;
+    const confirmations = status?.minConfirmations ?? 10;
+    const coverage = coverageLabel(pool, liability);
+    const barPct = coverageRatio(pool, liability);
+    const custodyMode = status?.custodyMode || "cn_wallet";
+    const custodyLabel = custodyMode === "tss" ? "TSS" : "Bridge wallet";
 
     return (
         <section className={styles.page} aria-label="Bridge ARQX peg">
@@ -121,21 +134,21 @@ function BridgeArqxPage() {
                         />
                         <h2>Bridge ARQX</h2>
                         <div className={styles.pills}>
-                            <span className={`${styles.pill} ${ready ? styles.pillOk : styles.pillWarn}`}>
+                            <span className={`${styles.pill} ${reservesOk ? styles.pillOk : styles.pillWarn}`}>
+                                {reservesOk ? "Reserves OK" : "Reserves check failed"}
+                            </span>
+                            <span className={`${styles.pill} ${ready ? styles.pillInfo : styles.pillMuted}`}>
                                 {ready ? "Bridge ready" : "Bridge pending"}
                             </span>
                             <span className={`${styles.pill} ${watcherReady ? styles.pillInfo : styles.pillMuted}`}>
                                 {watcherReady ? "Watcher live" : "Watcher pending"}
                             </span>
-                            <span className={`${styles.pill} ${styles.pillMuted}`}>
-                                {(status?.mode || "—").toUpperCase()}
-                            </span>
                         </div>
                     </div>
                 </div>
                 <p>
-                    ARQ → ARQX wrap on PDC (1:1 via Trade). Cryptonote deposit watcher + remote mint —
-                    read-only status from the Trade API.
+                    On-chain ARQ in the bridge wallet vs circulating ARQX liability (1:1 peg coverage).
+                    Read-only public status from the Trade API.
                 </p>
             </div>
 
@@ -148,32 +161,55 @@ function BridgeArqxPage() {
 
             <div className={styles.cards}>
                 <article className={styles.card}>
-                    <span>Circulating ARQX</span>
-                    <strong className={styles.mono}>{circulating} ARQX</strong>
-                    <em>{decimals} decimals · on-chain supply</em>
+                    <span>ARQ in bridge wallet</span>
+                    <strong className={styles.mono}>{formatAtomic(pool, decimals)} ARQ</strong>
+                    <em>{formatAtomicGrouped(pool)} atomic</em>
                 </article>
                 <article className={styles.card}>
-                    <span>Deposit</span>
-                    <strong>{depositEnabled ? "Enabled" : "Disabled"}</strong>
-                    <em>ARQ → mint ARQX</em>
+                    <span>ARQX minted liability</span>
+                    <strong className={styles.mono}>{formatAtomic(liability, decimals)} ARQX</strong>
+                    <em>{formatAtomicGrouped(liability)} atomic</em>
                 </article>
                 <article className={styles.card}>
-                    <span>Withdraw</span>
-                    <strong>{withdrawEnabled ? "Enabled" : "Disabled"}</strong>
-                    <em>Burn ARQX → ARQ payout</em>
+                    <span>Coverage ratio</span>
+                    <strong>{status ? coverage : "—"}</strong>
+                    <em>
+                        {liability === BigInt(0)
+                            ? "No circulating liability"
+                            : `${formatAtomic(pool, decimals)} / ${formatAtomic(liability, decimals)} ARQ`}
+                    </em>
                 </article>
                 <article className={styles.card}>
-                    <span>Market pair</span>
-                    <strong>{status?.pair || "ARQX/BTCX"}</strong>
-                    <em>Trade hub listing</em>
+                    <span>Custody</span>
+                    <strong>{custodyLabel}</strong>
+                    <em>{custodyMode}</em>
                 </article>
+            </div>
+
+            <div className={styles.coverage}>
+                <div className={styles.coverageHead}>
+                    <h3>Peg coverage</h3>
+                    <p>
+                        {formatAtomicGrouped(pool)} atomic pool · {formatAtomicGrouped(liability)} atomic liability
+                    </p>
+                </div>
+                <div className={styles.barTrack} aria-hidden>
+                    <div className={styles.barFill} style={{ width: `${barPct}%` }} />
+                </div>
+                <p className={styles.note}>
+                    Pool via Arqma deposit wallet-rpc balance; liability from on-chain ARQX{" "}
+                    <code>current_supply</code>
+                    {status?.updatedAt
+                        ? ` · Updated ${new Date(status.updatedAt * 1000).toISOString()}.`
+                        : "."}
+                </p>
             </div>
 
             <div className={styles.grid}>
                 <div className={styles.panel}>
                     <div className={styles.panelHead}>
                         <h3>Deposit &amp; policy</h3>
-                        <p>ARQ deposit path for the ARQX wrap (live wallet-rpc watcher).</p>
+                        <p>ARQ → ARQX wrap path (live wallet-rpc watcher).</p>
                     </div>
                     <table className={styles.table}>
                         <tbody>
@@ -263,6 +299,14 @@ function BridgeArqxPage() {
                                 <td>{status?.mode || (loading ? "Loading…" : "—")}</td>
                             </tr>
                             <tr>
+                                <th>Deposit / withdraw</th>
+                                <td>
+                                    {(status?.depositEnabled ? "Deposit on" : "Deposit off")}
+                                    {" · "}
+                                    {(status?.withdrawEnabled ? "Withdraw on" : "Withdraw off")}
+                                </td>
+                            </tr>
+                            <tr>
                                 <th>Bridge message</th>
                                 <td style={{ fontFamily: "var(--sans)", wordBreak: "break-word" }}>
                                     {status?.message || (loading ? "Loading…" : "—")}
@@ -274,26 +318,18 @@ function BridgeArqxPage() {
                                     {status?.mintOwnerHint || "—"}
                                 </td>
                             </tr>
-                            <tr>
-                                <th>Updated</th>
-                                <td>
-                                    {status?.updatedAt
-                                        ? new Date(status.updatedAt * 1000).toISOString()
-                                        : "—"}
-                                </td>
-                            </tr>
                         </tbody>
                     </table>
                     <p className={styles.callout}>
-                        Source: Trade <code>GET /api/bridge/arqx/status</code> via explorer proxy.
-                        Circulating supply from on-chain <code>get_asset_info</code>.
+                        Source: Trade <code>GET /api/bridge/arqx/status</code> via explorer proxy
+                        (wallet balance + on-chain supply).
                     </p>
                 </div>
             </div>
 
             <p className={styles.note}>
-                Unlike BTCX, ARQX deposits are watched on Arqma (cryptonote wallet-rpc). Destination PDC
-                addresses from private invoices are never listed on this page.
+                Unlike BTCX (Bitcoin TSS pool), ARQ reserves sit in the Arqma bridge deposit wallet.
+                Destination PDC addresses from private invoices are never listed on this page.
             </p>
         </section>
     );
