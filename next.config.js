@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  async rewrites() {
+    return [
+      // Avoid Next pages conflict: bridge.js + bridge/arqx.js cannot coexist.
+      { source: "/bridge/arqx", destination: "/bridge-arqx" },
+    ];
+  },
   webpack: (config) => {
     const fileLoaderRule = config.module.rules.find((rule) =>
       rule.test?.test?.(".svg")

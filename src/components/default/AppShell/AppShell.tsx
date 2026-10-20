@@ -19,7 +19,7 @@ const EXPLORER_LINKS = [
     { href: "/aliases", label: "Aliases", icon: "alias" },
     { href: "/assets", label: "Assets", icon: "asset" },
     { href: "/bridge", label: "Bridge BTCX", icon: "bridge" },
-    { href: "/bridge/arqx", label: "Bridge ARQX", icon: "bridge" },
+    { href: "/bridge-arqx", label: "Bridge ARQX", icon: "bridge" },
     { href: "/charts", label: "Charts", icon: "chart" },
     { href: "/pdc_api", label: "API", icon: "api" },
 ];

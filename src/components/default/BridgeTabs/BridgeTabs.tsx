@@ -4,7 +4,7 @@ import styles from "./BridgeTabs.module.scss";
 
 const TABS = [
     { href: "/bridge", label: "Bridge BTCX" },
-    { href: "/bridge/arqx", label: "Bridge ARQX" },
+    { href: "/bridge-arqx", label: "Bridge ARQX" },
 ] as const;
 
 export default function BridgeTabs() {
