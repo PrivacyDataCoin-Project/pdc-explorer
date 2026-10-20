@@ -46,6 +46,6 @@ export const BTCX_ASSET_ID =
 export const ARQX_ASSET_ID =
     "d59ca1b363d5f44e0f087d9549b734815fbc2a6ab49ef0a877ccd910b1a1b9c3";
 
-/** Public Arqma deposit address for the ARQX wrap bridge (Trade live watcher). */
+/** Public Arqma bridge address for the ARQX wrap (Trade live watcher). */
 export const ARQX_DEPOSIT_ADDRESS =
     "ar3LY7oysJU38hASBtQ9iDR1A8dPMGHTVJvjK68sfdmDJo4VzYXGM8GS9s86MgPYrPMEaLCXJhTkbTX9N196KJmk2ZfrYVfWF";

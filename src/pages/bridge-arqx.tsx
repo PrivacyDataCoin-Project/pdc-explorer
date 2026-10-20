@@ -178,7 +178,7 @@ function BridgeArqxPage() {
                     <table className={styles.table}>
                         <tbody>
                             <tr>
-                                <th>ARQ deposit address</th>
+                                <th>ARQ bridge address</th>
                                 <td>
                                     <span style={{ display: "inline-flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                                         <CopyButton text={ARQX_DEPOSIT_ADDRESS} />
