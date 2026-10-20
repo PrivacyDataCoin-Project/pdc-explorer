@@ -40,3 +40,7 @@ export const PDC_ASSET_ID =
 /** Wrapped Bitcoin (BTCX) asset id used by the Trade bridge peg. */
 export const BTCX_ASSET_ID =
     "c2bf0410873b49ec7e7dd19d62bca9625d80cd3123670a67b48d997d3127426d";
+
+/** Wrapped Arqma (ARQX) asset id used by the Trade CN wrap bridge. */
+export const ARQX_ASSET_ID =
+    "d59ca1b363d5f44e0f087d9549b734815fbc2a6ab49ef0a877ccd910b1a1b9c3";

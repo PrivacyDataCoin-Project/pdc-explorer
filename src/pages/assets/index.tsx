@@ -16,7 +16,7 @@ import { useSearchParams } from "next/navigation";
 import { GetServerSideProps } from "next";
 import { AssetsPageProps, getAssets } from "@/utils/ssr";
 import Utils from "@/utils/utils";
-import { BTCX_ASSET_ID, PDC_ASSET_ID } from "@/utils/constants";
+import { ARQX_ASSET_ID, BTCX_ASSET_ID, PDC_ASSET_ID } from "@/utils/constants";
 import { NETWORK } from "@/config/network";
 import Link from "next/link";
 
@@ -24,7 +24,7 @@ function assetSourceLink(assetId?: string) {
     if (assetId === PDC_ASSET_ID) {
         return <Link href={NETWORK.website} target="_blank" rel="noreferrer">Website</Link>;
     }
-    if (assetId === BTCX_ASSET_ID) {
+    if (assetId === BTCX_ASSET_ID || assetId === ARQX_ASSET_ID) {
         return <Link href={NETWORK.tradeWebsite} target="_blank" rel="noreferrer">Website</Link>;
     }
     return "—";
