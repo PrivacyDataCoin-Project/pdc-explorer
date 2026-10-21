@@ -46,6 +46,22 @@ export const BTCX_ASSET_ID =
 export const ARQX_ASSET_ID =
     "d59ca1b363d5f44e0f087d9549b734815fbc2a6ab49ef0a877ccd910b1a1b9c3";
 
+/**
+ * PDCx asset id — oracle fee CA + 1:1 PDC wrap (mainnet 2026-10-22).
+ * Explorer prices PDCx like native PDC (see isPdcxAsset).
+ */
+export const PDCX_ASSET_ID =
+    "5292b7984565b21d47e456c381973b700738b9819f9e96b841f68cfa116774bd";
+
 /** Public Arqma bridge address for the ARQX wrap (Trade live watcher). */
 export const ARQX_DEPOSIT_ADDRESS =
     "ar3LY7oysJU38hASBtQ9iDR1A8dPMGHTVJvjK68sfdmDJo4VzYXGM8GS9s86MgPYrPMEaLCXJhTkbTX9N196KJmk2ZfrYVfWF";
+
+/** True for PDCx wrap/fee CA (ticker PDCX / PDCx, or known asset id). */
+export function isPdcxAsset(asset?: { asset_id?: string; ticker?: string } | null): boolean {
+    if (!asset) return false;
+    const ticker = String(asset.ticker || "").toUpperCase();
+    if (ticker === "PDCX") return true;
+    const id = String(asset.asset_id || "").toLowerCase();
+    return Boolean(PDCX_ASSET_ID) && id === PDCX_ASSET_ID.toLowerCase();
+}
