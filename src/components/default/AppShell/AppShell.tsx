@@ -18,6 +18,7 @@ const EXPLORER_LINKS = [
     { href: "/alt-blocks", label: "Alt-blocks", icon: "alt" },
     { href: "/aliases", label: "Aliases", icon: "alias" },
     { href: "/assets", label: "Assets", icon: "asset" },
+    { href: "/bridge-pdcx", label: "Bridge PDCx", icon: "pdcx" },
     { href: "/bridge", label: "Bridge BTCX", icon: "btcx" },
     { href: "/bridge-arqx", label: "Bridge ARQX", icon: "arq" },
     { href: "/charts", label: "Charts", icon: "chart" },
@@ -97,6 +98,18 @@ function Icon({ name }: { name: string }) {
                 <path d="M2.5 11.5c1.8-3.5 4-5.2 5.5-5.2s3.7 1.7 5.5 5.2" stroke="currentColor" strokeLinecap="round" />
                 <path d="M4 11.5h8M5.5 8.2V5.5M10.5 8.2V5.5" stroke="currentColor" strokeLinecap="round" />
             </svg>
+        );
+    }
+    if (name === "pdcx") {
+        return (
+            <img
+                className={styles.navGlyph}
+                src="/currency-icons/pdcx.png"
+                alt=""
+                width={16}
+                height={16}
+                aria-hidden
+            />
         );
     }
     if (name === "btcx") {
