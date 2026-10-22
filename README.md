@@ -71,3 +71,11 @@ Open `http://127.0.0.1:3000`.
 `NET_MODE=TEST` switches the UI into testnet mode. Point `API` at the testnet daemon RPC (`19111` in `currency_config.h`). Set `NEXT_PUBLIC_MAINNET_EXPLORER` and `NEXT_PUBLIC_TESTNET_EXPLORER` when both explorers are deployed; the header shows the switch only then.
 
 Price history is skipped unless `PRICE_SYMBOL` is a real spot market (for example `PDCUSDT`). Asset whitelist, trade, and Matrix URLs are optional and are not called when empty.
+
+## Mempool (transaction pool) notes
+
+The home-page **Transaction Pool** is synced from the daemon into Postgres (`pool` table) and pushed over the socket.
+
+A sync bug used `attributes: ['id']` (row PK) when checking existing txs, so the same `tx_id` could be inserted more than once. The UI then showed one hash twice (same timestamp/size/fee) — that is **not** a double broadcast.
+
+Mitigations (2026-10-22): unique index on `tx_id`, correct attribute filter + in-batch dedupe on insert, and API/UI dedupe by `tx_id` when emitting pool details.
