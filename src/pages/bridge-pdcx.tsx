@@ -23,6 +23,8 @@ interface PdcxBridgeStatus {
     oracleFeeAsset?: boolean;
     fundingPending?: boolean;
     emitBurnEnabled?: boolean;
+    depositAddress?: string | null;
+    minConfirmations?: number;
 }
 
 function formatAtomic(atomic: bigint, decimals: number): string {
@@ -139,7 +141,7 @@ function BridgePdcxPage() {
                 </div>
                 <p>
                     Wrapped PDC (display <strong>PDCX</strong>; on-chain ticker <code>PDCx</code>) — 1:1 wrap of
-                    native PDC for oracle attestation fees. Read-only status from Trade.
+                    native PDC for oracle attestation fees. Status + custody deposit from Trade.
                 </p>
             </div>
 
@@ -215,6 +217,24 @@ function BridgePdcxPage() {
                                     {(status?.depositEnabled ? "Deposit on" : "Deposit off")}
                                     {" · "}
                                     {(status?.withdrawEnabled ? "Withdraw on" : "Withdraw off")}
+                                    {status?.minConfirmations != null
+                                        ? ` · ≥${status.minConfirmations} conf`
+                                        : ""}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Custody deposit (PDC)</th>
+                                <td>
+                                    {status?.depositAddress ? (
+                                        <span style={{ display: "inline-flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                                            <CopyButton text={status.depositAddress} />
+                                            <span className={styles.mono} style={{ fontSize: 12, wordBreak: "break-all" }}>
+                                                {status.depositAddress}
+                                            </span>
+                                        </span>
+                                    ) : (
+                                        <span className={styles.pill + " " + styles.pillMuted}>Not published</span>
+                                    )}
                                 </td>
                             </tr>
                             <tr>
@@ -223,6 +243,10 @@ function BridgePdcxPage() {
                                     <Link href={NETWORK.tradeWebsite} target="_blank" rel="noreferrer">
                                         trade.privacydatacoin.com
                                     </Link>
+                                    {" · "}
+                                    <span style={{ fontFamily: "var(--sans)", fontSize: 13 }}>
+                                        API <code>/api/bridge/pdcx/*</code>
+                                    </span>
                                 </td>
                             </tr>
                         </tbody>
