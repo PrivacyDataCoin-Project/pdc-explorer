@@ -2139,14 +2139,15 @@ async function waitForDb() {
                     }
 
                     try {
-                        // Fetch all transaction ids currently in the pool
+                        // Fetch tx_id values already stored (bugfix: was attributes:['id'] → all undefined → re-insert)
                         const existingTransactions = await Pool.findAll({
-                            attributes: ['id']
+                            attributes: ['tx_id']
                         });
 
-                        // Find new transactions that are not already in the pool
-                        const existingIds = existingTransactions.map(tx => tx.tx_id);
-                        const new_ids = state.pools_array.filter(id => !existingIds.includes(id));
+                        const existingIds = new Set(
+                            existingTransactions.map(tx => tx.tx_id).filter(Boolean)
+                        );
+                        const new_ids = state.pools_array.filter(id => !existingIds.has(id));
 
                         if (new_ids.length) {
                             try {
@@ -2154,16 +2155,19 @@ async function waitForDb() {
                                 let response = await get_pool_txs_details(new_ids);
                                 if (response.data.result && response.data.result.txs) {
 
-                                    const existingTransactions = await Pool.findAll({
-                                        attributes: ['tx_id']
-                                    });
-
-                                    const txInserts = response.data.result.txs.map(tx => ({
-                                        blob_size: tx.blob_size,
-                                        fee: tx.fee,
-                                        tx_id: tx.id,
-                                        timestamp: tx.timestamp * 1e3,
-                                    })).filter(tx => !existingTransactions.map(e => e.tx_id).includes(tx.tx_id));
+                                    const seen = new Set(existingIds);
+                                    const txInserts = [];
+                                    for (const tx of response.data.result.txs) {
+                                        const txId = tx.id;
+                                        if (!txId || seen.has(txId)) continue;
+                                        seen.add(txId);
+                                        txInserts.push({
+                                            blob_size: tx.blob_size,
+                                            fee: tx.fee,
+                                            tx_id: txId,
+                                            timestamp: tx.timestamp * 1e3,
+                                        });
+                                    }
 
                                     // Insert the new transactions into the pool
                                     if (txInserts.length > 0) {

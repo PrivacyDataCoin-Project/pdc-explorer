@@ -168,29 +168,36 @@ export async function getMainBlockDetails(id: string) {
 
 export async function getTxPoolDetails(count: number) {
     // When count is 0, retrieve all records ordered by timestamp DESC
-    if (count === 0) {
-        const result = await Pool.findAll({
+    const result = count === 0
+        ? await Pool.findAll({
             attributes: ['blob_size', 'fee', 'id', 'timestamp', 'tx_id'],
             order: [['timestamp', 'DESC']]
+        })
+        : await Pool.findAll({
+            attributes: [
+                'blob_size',
+                'fee',
+                'id',
+                'timestamp',
+                'tx_id',
+                [literal('false'), 'isNew'] // Adding a literal false as "isNew"
+            ],
+            order: [['timestamp', 'DESC']],
+            limit: count || 500
         });
-        return result.length > 0 ? result : [];
+
+    if (!result.length) return [];
+
+    // Dedupe by tx_id (legacy non-unique pool rows / daemon list quirks)
+    const seen = new Set<string>();
+    const deduped = [];
+    for (const row of result) {
+        const txId = row.tx_id;
+        if (txId && seen.has(txId)) continue;
+        if (txId) seen.add(txId);
+        deduped.push(row);
     }
-
-    // Retrieve records with a limit, ordered by timestamp DESC
-    const result = await Pool.findAll({
-        attributes: [
-            'blob_size',
-            'fee',
-            'id',
-            'timestamp',
-            'tx_id',
-            [literal('false'), 'isNew'] // Adding a literal false as "isNew"
-        ],
-        order: [['timestamp', 'DESC']],
-        limit: count || 500
-    });
-
-    return result.length > 0 ? result : [];
+    return deduped;
 }
 
 export const emitSocketInfo = async (socket?: Socket) => {

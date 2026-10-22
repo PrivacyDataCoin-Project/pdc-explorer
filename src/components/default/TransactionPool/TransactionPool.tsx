@@ -29,8 +29,15 @@ function TransactionPool({
     useEffect(() => {
         function onPool(data: string) {
             try {
-                const parsedData = JSON.parse(data);
-                setPoolElements(parsedData);
+                const parsedData = JSON.parse(data) as PoolElement[];
+                const seen = new Set<string>();
+                const deduped = (Array.isArray(parsedData) ? parsedData : []).filter((el) => {
+                    const id = el?.tx_id;
+                    if (!id || seen.has(id)) return false;
+                    seen.add(id);
+                    return true;
+                });
+                setPoolElements(deduped);
             } catch (error) {
                 console.error(error);
             }

@@ -26,6 +26,7 @@ Pool.init(
         timestamps: true,
         indexes: [
             {
+                unique: true,
                 fields: ['tx_id'],
             },
         ],
