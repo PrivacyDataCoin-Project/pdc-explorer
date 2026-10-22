@@ -5,6 +5,7 @@ import styles from "./BridgeTabs.module.scss";
 const TABS = [
     { href: "/bridge", label: "Bridge BTCX", icon: "/currency-icons/wbtc.svg" },
     { href: "/bridge-arqx", label: "Bridge ARQX", icon: "/currency-icons/arq.png" },
+    { href: "/bridge-pdcx", label: "Bridge PDCx", icon: "/currency-icons/pdcx.png" },
 ] as const;
 
 export default function BridgeTabs() {
