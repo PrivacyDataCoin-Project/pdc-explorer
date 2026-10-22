@@ -984,6 +984,22 @@ async function waitForDb() {
     );
 
     app.get(
+        '/api/bridge_pdcx_status',
+        exceptionHandler(async (_req, res) => {
+            const tradeBase = (config.trade_api_url || 'https://api.trade.privacydatacoin.com/api').replace(/\/$/, '');
+            try {
+                const response = await axios.get(`${tradeBase}/bridge/pdcx/status`, { timeout: 15000 });
+                res.json({ success: true, data: response.data });
+            } catch (error: any) {
+                const message = error?.response?.data?.message
+                    || error?.message
+                    || 'Failed to fetch PDCx bridge status';
+                res.status(502).json({ success: false, error: message });
+            }
+        })
+    );
+
+    app.get(
         '/api/bridge_arqx_history',
         exceptionHandler(async (req, res) => {
             const limitRaw = Number(req.query.limit);
@@ -1517,7 +1533,7 @@ async function waitForDb() {
             }
         };
 
-        switch (req.query.asset) {
+        switch (String(req.query.asset || '').toLowerCase()) {
             case "ethereum":
                 if (state.priceData?.ethereum?.price === undefined) {
                     responseData.data = {};
@@ -1530,6 +1546,23 @@ async function waitForDb() {
                             usd_24h_change: state.priceData?.ethereum?.usd_24h_change,
                             name: "Ethereum",
                             fiat_prices: calcFiatPrice(state.priceData?.ethereum?.price, state?.fiat_rates),
+                        }
+                    };
+                }
+                break;
+            case "pdcx":
+                // Wrapped PDCX tracks native PDC USD (same feed as ?asset=pdc).
+                if (state.priceData?.pdc?.price === undefined) {
+                    responseData.data = {};
+                    responseData.success = false;
+                } else {
+                    responseData.data = {
+                        pdcx: {
+                            name: "Wrapped PDCX",
+                            usd: state.priceData?.pdc?.price,
+                            pdc_price: 1,
+                            usd_24h_change: state.priceData?.pdc?.usd_24h_change,
+                            fiat_prices: calcFiatPrice(state.priceData?.pdc?.price, state?.fiat_rates),
                         }
                     };
                 }

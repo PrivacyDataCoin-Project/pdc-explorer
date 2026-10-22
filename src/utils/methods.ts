@@ -121,6 +121,10 @@ class Fetch {
         return await fetch(this.proxyPath + "/bridge_arqx_status").then(res => res.json());
     }
 
+    static async getBridgePdcxStatus() {
+        return await fetch(this.proxyPath + "/bridge_pdcx_status").then(res => res.json());
+    }
+
     static async getBridgeArqxHistory(limit = 50, type: "all" | "mint" | "burn" = "all") {
         const q = new URLSearchParams({
             limit: String(limit),

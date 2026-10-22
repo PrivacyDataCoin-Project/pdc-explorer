@@ -26,6 +26,17 @@
     }
 }
 
+.nameWithIcon {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    img {
+        flex-shrink: 0;
+        border-radius: 4px;
+    }
+}
+
 .asset_popup__bottom {
     width: 100%;
     display: flex;

@@ -16,21 +16,40 @@ import { useSearchParams } from "next/navigation";
 import { GetServerSideProps } from "next";
 import { AssetsPageProps, getAssets } from "@/utils/ssr";
 import Utils from "@/utils/utils";
-import { ARQX_ASSET_ID, BTCX_ASSET_ID, PDC_ASSET_ID } from "@/utils/constants";
+import { ARQX_ASSET_ID, BTCX_ASSET_ID, PDC_ASSET_ID, isPdcxAsset } from "@/utils/constants";
 import { NETWORK } from "@/config/network";
 import Link from "next/link";
 
-function assetSourceLink(assetId?: string) {
-    if (assetId === PDC_ASSET_ID) {
+function assetSourceLink(asset?: { asset_id?: string; ticker?: string }) {
+    if (!asset) return "—";
+    if (asset.asset_id === PDC_ASSET_ID || isPdcxAsset(asset)) {
         return <Link href={NETWORK.website} target="_blank" rel="noreferrer">Website</Link>;
     }
-    if (assetId === BTCX_ASSET_ID) {
+    if (asset.asset_id === BTCX_ASSET_ID) {
         return <Link href={NETWORK.tradeWebsite} target="_blank" rel="noreferrer">Website</Link>;
     }
-    if (assetId === ARQX_ASSET_ID) {
+    if (asset.asset_id === ARQX_ASSET_ID) {
         return <Link href={NETWORK.arqmaWebsite} target="_blank" rel="noreferrer">Website</Link>;
     }
     return "—";
+}
+
+function assetIconSrc(asset?: { asset_id?: string; ticker?: string }): string | null {
+    if (!asset) return null;
+    if (asset.asset_id === PDC_ASSET_ID || isPdcxAsset(asset)) return "/currency-icons/pdc.png";
+    if (asset.asset_id === BTCX_ASSET_ID) return "/currency-icons/wbtc.svg";
+    if (asset.asset_id === ARQX_ASSET_ID) return "/currency-icons/arq.png";
+    return null;
+}
+
+function assetNameCell(asset: { full_name?: string; asset_id?: string; ticker?: string }) {
+    const icon = assetIconSrc(asset);
+    return (
+        <span className={styles.nameWithIcon}>
+            {icon ? <img src={icon} alt="" width={18} height={18} /> : null}
+            {asset?.full_name || ""}
+        </span>
+    );
 }
 
 function formatUsdPrice(value: number): string {
@@ -126,7 +145,10 @@ function Assets(props: AssetsPageProps) {
                     : NaN);
 
             return list.map((asset) => {
-                if (asset?.asset_id === PDC_ASSET_ID && Number.isFinite(pdcUsd) && pdcUsd > 0) {
+                if (
+                    (asset?.asset_id === PDC_ASSET_ID || isPdcxAsset(asset))
+                    && Number.isFinite(pdcUsd) && pdcUsd > 0
+                ) {
                     return { ...asset, price: formatUsdPrice(pdcUsd) };
                 }
                 if (asset?.asset_id === BTCX_ASSET_ID && Number.isFinite(resolvedBtcxUsd) && resolvedBtcxUsd > 0) {
@@ -250,6 +272,7 @@ function Assets(props: AssetsPageProps) {
                             resultAsset?.asset_id === PDC_ASSET_ID
                             || resultAsset?.asset_id === BTCX_ASSET_ID
                             || resultAsset?.asset_id === ARQX_ASSET_ID
+                            || isPdcxAsset(resultAsset)
                         ) {
                             return resultAsset;
                         }
@@ -285,7 +308,7 @@ function Assets(props: AssetsPageProps) {
     const tableHeaders = [ "NAME", "TICKER", "ASSET ID", "PRICE", "SOURCE" ];    
     
     const tableElements = assets.map(e => [
-        e?.full_name || "",
+        assetNameCell(e),
         e?.ticker || "",
         <div className={styles["assets__table_asset-id"]}>
             <CopyButton text={e?.asset_id || ""} />
@@ -295,7 +318,7 @@ function Assets(props: AssetsPageProps) {
             
         </div>,
         e?.price ? `${e?.price}$` : "No data",
-        assetSourceLink(e?.asset_id),
+        assetSourceLink(e),
     ]);
 
     const statsPanelData = [

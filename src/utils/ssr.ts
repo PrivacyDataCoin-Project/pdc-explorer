@@ -7,7 +7,7 @@ import { latestBlocksInitState } from "@/components/default/LatestBlocks/LatestB
 import Utils from "./utils";
 import { DEFAULT_ITEMS_ON_PAGE } from "@/pages/aliases";
 import { DEFAULT_ASSETS_ON_PAGE } from "@/pages/assets";
-import { ARQX_ASSET_ID, BTCX_ASSET_ID, PDC_ASSET_ID } from "./constants";
+import { ARQX_ASSET_ID, BTCX_ASSET_ID, PDC_ASSET_ID, isPdcxAsset } from "./constants";
 import { GetServerSidePropsContext } from "next";
 
 export async function getMainPageProps() {
@@ -285,7 +285,10 @@ export async function getAssets() {
         }
 
         assets.forEach((element: any) => {
-            if (element.asset_id === PDC_ASSET_ID && Number.isFinite(pdcUsd) && (pdcUsd as number) > 0) {
+            if (
+                (element.asset_id === PDC_ASSET_ID || isPdcxAsset(element))
+                && Number.isFinite(pdcUsd) && (pdcUsd as number) > 0
+            ) {
                 element.price = formatUsd(pdcUsd as number);
             }
             if (element.asset_id === BTCX_ASSET_ID && Number.isFinite(btcxUsd) && (btcxUsd as number) > 0) {
