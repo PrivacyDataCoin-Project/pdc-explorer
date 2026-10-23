@@ -109,11 +109,22 @@ async function waitForDb() {
 
     // });
 
-    app.get('/api/find_outs_in_recent_blocks', exceptionHandler(async (req, res) => {
-        const address = req.query.address;
-        const viewkey = req.query.viewkey;
-        const limit = req.query.limit || 5;
+    // SEC-003: never accept private viewkey via query string (logs, Referer, history).
+    app.get('/api/find_outs_in_recent_blocks', exceptionHandler(async (_req, res) => {
+        return res.status(405).json({
+            error: 'Use POST /api/find_outs_in_recent_blocks with JSON body { address, viewkey, limit }',
+        });
+    }));
 
+    app.post('/api/find_outs_in_recent_blocks', exceptionHandler(async (req, res) => {
+        const body = (req.body && typeof req.body === 'object' ? req.body : {}) as {
+            address?: string;
+            viewkey?: string;
+            limit?: number | string;
+        };
+        const address = body.address;
+        const viewkey = body.viewkey;
+        const limit = body.limit || 5;
 
         if (!address) {
             return res.status(400).json({ error: 'Address is required' });

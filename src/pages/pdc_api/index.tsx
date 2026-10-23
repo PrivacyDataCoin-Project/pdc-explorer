@@ -99,7 +99,7 @@ function API() {
         {
             title: "Request outs of recent blocks",
             method: { text: "find_outs_in_recent_blocks", link: "https://github.com/PrivacyDataCoin-Project/PDC" },
-            example: "/api/find_outs_in_recent_blocks?address={address}&viewkey={viewkey}&limit={limit}",
+            example: "POST /api/find_outs_in_recent_blocks JSON { address, viewkey, limit }",
             json: examples.find_outs_in_recent_blocks
         }
     ]
