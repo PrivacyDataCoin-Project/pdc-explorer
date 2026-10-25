@@ -1049,6 +1049,44 @@ async function waitForDb() {
     );
 
     app.get(
+        '/api/bridge_pdcx_history',
+        exceptionHandler(async (req, res) => {
+            const limitRaw = Number(req.query.limit);
+            const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(100, Math.trunc(limitRaw))) : 50;
+            const typeRaw = String(req.query.type || 'all').trim().toLowerCase();
+            const type = typeRaw === 'mint' || typeRaw === 'burn' || typeRaw === 'all' ? typeRaw : null;
+            if (!type) {
+                res.status(400).json({ success: false, error: 'type must be mint, burn, or all' });
+                return;
+            }
+            const tradeBase = (config.trade_api_url || 'https://api.trade.privacydatacoin.com/api').replace(/\/$/, '');
+            try {
+                const response = await axios.get(`${tradeBase}/bridge/pdcx/history`, {
+                    params: { limit, type },
+                    timeout: 15000,
+                    validateStatus: () => true,
+                });
+                if (response.status >= 400) {
+                    const message = response.data?.error
+                        || response.data?.message
+                        || `Trade API returned ${response.status}`;
+                    res.status(response.status === 429 ? 429 : 502).json({
+                        success: false,
+                        error: message,
+                    });
+                    return;
+                }
+                res.json({ success: true, data: response.data });
+            } catch (error: any) {
+                const message = error?.response?.data?.message
+                    || error?.message
+                    || 'Failed to fetch PDCx bridge history';
+                res.status(502).json({ success: false, error: message });
+            }
+        })
+    );
+
+    app.get(
         '/api/pdc_market',
         exceptionHandler(async (_req, res) => {
             const tradeBase = (config.trade_api_url || 'https://api.trade.privacydatacoin.com/api').replace(/\/$/, '');
