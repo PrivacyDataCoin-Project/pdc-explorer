@@ -9,6 +9,7 @@ import { socket } from "@/utils/socket";
 import { NETWORK } from "@/config/network";
 import { PoolElement } from "@/components/default/TransactionPool/TransactionPool";
 import { amountFromAtomic, formatMarketHint, PdcMarketQuote } from "@/utils/marketPrice";
+import MatrixText from "@/components/UI/MatrixText/MatrixText";
 
 function readPercent(value: string | number | undefined) {
     if (value == null || value === "") return null;
@@ -54,7 +55,11 @@ function Donut({ value, color, caption }: { value: number | null; color: string;
                 />
             </svg>
             <div className={styles.donutLabel}>
-                <strong>{value == null ? "—" : `${shown.toFixed(1)}%`}</strong>
+                <MatrixText
+                    as="strong"
+                    value={value == null ? "—" : `${shown.toFixed(1)}%`}
+                    duration={850}
+                />
                 <span>{caption}</span>
             </div>
         </div>
@@ -211,10 +216,15 @@ function NetworkBoard({
                     </div>
                 </div>
                 <div className={styles.facts}>
-                    {facts.map((fact) => (
+                    {facts.map((fact, index) => (
                         <div key={fact.label} className={styles.fact}>
                             <span>{fact.label}</span>
-                            <strong>{fact.value}</strong>
+                            <MatrixText
+                                as="strong"
+                                value={fact.value}
+                                staggerMs={100 + index * 55}
+                                duration={800 + (index % 3) * 80}
+                            />
                             {"hint" in fact && fact.hint ? (
                                 <p className={styles.factHint}>{fact.hint}</p>
                             ) : null}

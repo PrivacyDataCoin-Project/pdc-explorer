@@ -1,6 +1,7 @@
 import { chartRequestNames } from "./constants";
 
 const PORT = process.env.SERVER_PORT || "3000";
+const SSR_API_ORIGIN = (process.env.EXPLORER_API_ORIGIN || `http://localhost:${PORT}`).replace(/\/$/, "");
 
 async function postFetch(path: string, body: Object) {
     return await fetch(path, {
@@ -13,7 +14,7 @@ async function postFetch(path: string, body: Object) {
 }
 
 class Fetch {
-    static readonly proxyPath = typeof window === "undefined" ? `http://localhost:${PORT}/api` : "/api";
+    static readonly proxyPath = typeof window === "undefined" ? `${SSR_API_ORIGIN}/api` : "/api";
 
     static async getInfo() {
         return await fetch(this.proxyPath + "/get_info").then(res => res.json());

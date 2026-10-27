@@ -6,6 +6,7 @@ import BridgeTabs from "@/components/default/BridgeTabs/BridgeTabs";
 import { ARQX_ASSET_ID, ARQX_DEPOSIT_ADDRESS, NETWORK } from "@/config/network";
 import { amountFromAtomic, holdingValueHint } from "@/utils/marketPrice";
 import Link from "next/link";
+import MatrixText from "@/components/UI/MatrixText/MatrixText";
 
 interface ArqxBridgeStatus {
     slug?: string;
@@ -290,17 +291,34 @@ function BridgeArqxPage() {
             <div className={styles.cards}>
                 <article className={styles.card}>
                     <span>ARQ in bridge wallet</span>
-                    <strong className={styles.mono}>{formatAtomic(pool, decimals)} ARQ</strong>
+                    <MatrixText
+                        as="strong"
+                        className={styles.mono}
+                        value={status ? `${formatAtomic(pool, decimals)} ARQ` : "—"}
+                        staggerMs={80}
+                        duration={1000}
+                    />
                     <em>{poolHint || "—"}</em>
                 </article>
                 <article className={styles.card}>
                     <span>ARQX minted liability</span>
-                    <strong className={styles.mono}>{formatAtomic(liability, decimals)} ARQX</strong>
+                    <MatrixText
+                        as="strong"
+                        className={styles.mono}
+                        value={status ? `${formatAtomic(liability, decimals)} ARQX` : "—"}
+                        staggerMs={150}
+                        duration={1000}
+                    />
                     <em>{liabilityHint || "—"}</em>
                 </article>
                 <article className={styles.card}>
                     <span>Coverage ratio</span>
-                    <strong>{status ? coverage : "—"}</strong>
+                    <MatrixText
+                        as="strong"
+                        value={status ? coverage : "—"}
+                        staggerMs={220}
+                        duration={900}
+                    />
                     <em>
                         {liability === BigInt(0)
                             ? "No circulating liability"
@@ -318,7 +336,15 @@ function BridgeArqxPage() {
                 <div className={styles.coverageHead}>
                     <h3>Peg coverage</h3>
                     <p>
-                        {formatAtomicGrouped(pool)} atomic pool · {formatAtomicGrouped(liability)} atomic liability
+                        <MatrixText
+                            value={
+                                status
+                                    ? `${formatAtomicGrouped(pool)} atomic pool · ${formatAtomicGrouped(liability)} atomic liability`
+                                    : "—"
+                            }
+                            staggerMs={280}
+                            duration={1100}
+                        />
                     </p>
                 </div>
                 <div className={styles.barTrack} aria-hidden>

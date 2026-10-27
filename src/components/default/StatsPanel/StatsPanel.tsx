@@ -8,6 +8,7 @@ import { Store } from "@/store/store-reducer";
 import { NETWORK } from "@/config/network";
 import Fetch from "@/utils/methods";
 import { formatMarketHint } from "@/utils/marketPrice";
+import MatrixText from "@/components/UI/MatrixText/MatrixText";
 
 function StatsPanel(props: { visibilityInfo?: VisibilityInfo | null, fetchedInfo: Info | null, noStats?: boolean }) {
     const { state } = useContext(Store);
@@ -118,19 +119,30 @@ function StatsPanel(props: { visibilityInfo?: VisibilityInfo | null, fetchedInfo
     return (
         <section className={styles.wrap} aria-label="Network summary">
             <div className={styles.grid}>
-                {cards.map((card) => (
+                {cards.map((card, index) => (
                     <article key={card.label} className={`${styles.card} ${styles[card.tone]}`}>
                         <p className={styles.label}>{card.label}</p>
-                        <p className={styles.value}>{card.value}</p>
+                        <MatrixText
+                            as="p"
+                            className={styles.value}
+                            value={card.value}
+                            staggerMs={80 + index * 70}
+                            duration={900 + index * 40}
+                        />
                         <p className={styles.hint}>{card.hint}</p>
                     </article>
                 ))}
             </div>
             <div className={styles.details}>
-                {details.map((item) => (
+                {details.map((item, index) => (
                     <div key={item.label}>
                         <span>{item.label}</span>
-                        <strong>{item.value}</strong>
+                        <MatrixText
+                            as="strong"
+                            value={item.value}
+                            staggerMs={360 + index * 60}
+                            duration={750 + index * 30}
+                        />
                     </div>
                 ))}
             </div>

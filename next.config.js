@@ -2,10 +2,19 @@
 const nextConfig = {
   reactStrictMode: true,
   async rewrites() {
-    return [
+    const rules = [
       // Avoid Next pages conflict: bridge.js + bridge/arqx.js cannot coexist.
       { source: "/bridge/arqx", destination: "/bridge-arqx" },
     ];
+    // Local UI preview without Postgres/daemon: EXPLORER_API_ORIGIN=https://explorer.privacydatacoin.com
+    const apiOrigin = process.env.EXPLORER_API_ORIGIN;
+    if (apiOrigin) {
+      rules.push({
+        source: "/api/:path*",
+        destination: `${apiOrigin.replace(/\/$/, "")}/api/:path*`,
+      });
+    }
+    return rules;
   },
   webpack: (config) => {
     const fileLoaderRule = config.module.rules.find((rule) =>

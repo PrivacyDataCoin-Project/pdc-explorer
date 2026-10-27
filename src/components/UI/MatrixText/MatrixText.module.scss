@@ -1,0 +1,20 @@
+.matrix {
+    /* Settled: inherit parent typeface/size/weight. Only color is intentional. */
+    box-sizing: border-box;
+    white-space: nowrap;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+    font-family: inherit;
+    color: #3bc7ff;
+    text-shadow: none;
+    vertical-align: baseline;
+}
+
+.decoding {
+    /* Mild glow only while decoding; keep same inherited font (no mono swap). */
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    text-shadow: 0 0 6px rgba(59, 199, 255, 0.25);
+}

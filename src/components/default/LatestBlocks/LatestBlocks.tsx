@@ -9,6 +9,13 @@ import { ReactNode, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import BigNumber from "bignumber.js";
 import InfoIcon from "@/assets/images/UI/info.svg";
+import MatrixText from "@/components/UI/MatrixText/MatrixText";
+
+function truncateHash(hash: string, max = 52) {
+    if (!hash) return "—";
+    if (hash.length <= max) return hash;
+    return `${hash.slice(0, max)}…`;
+}
 
 export const latestBlocksInitState = {
     itemsInPage: 10,
@@ -144,7 +151,7 @@ function LatestBlocks({
 
     const tableHeaders = ["HEIGHT", "TIMESTAMP (UTC)", "AGE", "SIZE", "TRANSACTIONS", "HASH"];
 
-    const tableElements = blocks.map(e => {
+    const tableElements = blocks.map((e, index) => {
         const hash = e.hash;
         const hashLink = hash ? "/block/" + hash : "/";
         return [
@@ -156,7 +163,14 @@ function LatestBlocks({
             <span suppressHydrationWarning>{Utils.timeElapsedString(e.timestamp)}</span>,
             `${e.size} bytes`,
             e.transactions?.toString() || "0",
-            <AliasText href={hashLink}>{hash}</AliasText>
+            <AliasText href={hashLink}>
+                <MatrixText
+                    value={truncateHash(hash || "")}
+                    revealOnView
+                    staggerMs={(index % 10) * 40}
+                    duration={1000 + (index % 5) * 80}
+                />
+            </AliasText>
         ]
     });
 

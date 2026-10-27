@@ -4,6 +4,7 @@ import Fetch from "@/utils/methods";
 import CopyButton from "@/components/UI/CopyButton/CopyButton";
 import BridgeTabs from "@/components/default/BridgeTabs/BridgeTabs";
 import { amountFromAtomic, holdingValueHint } from "@/utils/marketPrice";
+import MatrixText from "@/components/UI/MatrixText/MatrixText";
 
 /** Public TSS deposit address for the BTCX peg (not always present in status JSON). */
 export const BTCX_TSS_ADDRESS = "bc1q7qlagem4lsp02x8uq2mx0zrrdjvn8m8k8lcn3d";
@@ -320,17 +321,34 @@ function BridgePage() {
             <div className={styles.cards}>
                 <article className={styles.card}>
                     <span>BTC in TSS pool</span>
-                    <strong className={styles.mono}>{satsToBtc(pool)} BTC</strong>
+                    <MatrixText
+                        as="strong"
+                        className={styles.mono}
+                        value={status ? `${satsToBtc(pool)} BTC` : "—"}
+                        staggerMs={80}
+                        duration={1000}
+                    />
                     <em>{poolHint || "—"}</em>
                 </article>
                 <article className={styles.card}>
                     <span>BTCX minted liability</span>
-                    <strong className={styles.mono}>{satsToBtc(liability)} BTCX</strong>
+                    <MatrixText
+                        as="strong"
+                        className={styles.mono}
+                        value={status ? `${satsToBtc(liability)} BTCX` : "—"}
+                        staggerMs={150}
+                        duration={1000}
+                    />
                     <em>{liabilityHint || "—"}</em>
                 </article>
                 <article className={styles.card}>
                     <span>Coverage ratio</span>
-                    <strong>{status ? coverage : "—"}</strong>
+                    <MatrixText
+                        as="strong"
+                        value={status ? coverage : "—"}
+                        staggerMs={220}
+                        duration={900}
+                    />
                     <em>
                         {liability === BigInt(0)
                             ? "No circulating liability"
@@ -348,7 +366,15 @@ function BridgePage() {
                 <div className={styles.coverageHead}>
                     <h3>Peg coverage</h3>
                     <p>
-                        {formatSats(pool)} sats pool · {formatSats(liability)} sats liability
+                        <MatrixText
+                            value={
+                                status
+                                    ? `${formatSats(pool)} sats pool · ${formatSats(liability)} sats liability`
+                                    : "—"
+                            }
+                            staggerMs={280}
+                            duration={1100}
+                        />
                     </p>
                 </div>
                 <div className={styles.barTrack} aria-hidden>

@@ -2,6 +2,7 @@ import styles from "./NodeMap.module.scss";
 import { useEffect, useRef, useState } from "react";
 import type { Map as LeafletMap } from "leaflet";
 import Fetch from "@/utils/methods";
+import MatrixText from "@/components/UI/MatrixText/MatrixText";
 
 interface NodePin {
     lat: number;
@@ -118,19 +119,19 @@ function NodeMap() {
             <div className={styles.stats}>
                 <div>
                     <span>Connected</span>
-                    <strong>{data.connected}</strong>
+                    <MatrixText as="strong" value={String(data.connected)} staggerMs={80} duration={900} />
                 </div>
                 <div>
                     <span>White list</span>
-                    <strong>{data.whitePeers}</strong>
+                    <MatrixText as="strong" value={String(data.whitePeers)} staggerMs={150} duration={900} />
                 </div>
                 <div>
                     <span>Grey list</span>
-                    <strong>{data.greyPeers}</strong>
+                    <MatrixText as="strong" value={String(data.greyPeers)} staggerMs={220} duration={900} />
                 </div>
                 <div>
                     <span>Countries</span>
-                    <strong>{countryCount}</strong>
+                    <MatrixText as="strong" value={String(countryCount)} staggerMs={290} duration={900} />
                 </div>
             </div>
             <div className={styles.body}>

@@ -6,6 +6,7 @@ import BridgeTabs from "@/components/default/BridgeTabs/BridgeTabs";
 import { NETWORK, PDCX_ASSET_ID, PDC_ASSET_ID } from "@/config/network";
 import { amountFromAtomic, holdingValueHint } from "@/utils/marketPrice";
 import Link from "next/link";
+import MatrixText from "@/components/UI/MatrixText/MatrixText";
 
 interface PdcxBridgeStatus {
     pair?: string;
@@ -302,17 +303,34 @@ function BridgePdcxPage() {
             <div className={styles.cards}>
                 <article className={styles.card}>
                     <span>PDC in bridge wallet</span>
-                    <strong className={styles.mono}>{formatAtomic(pool, pdcDecimals)} PDC</strong>
+                    <MatrixText
+                        as="strong"
+                        className={styles.mono}
+                        value={status ? `${formatAtomic(pool, pdcDecimals)} PDC` : "—"}
+                        staggerMs={80}
+                        duration={1000}
+                    />
                     <em>{poolHint || "—"}</em>
                 </article>
                 <article className={styles.card}>
                     <span>PDCx minted liability</span>
-                    <strong className={styles.mono}>{formatAtomic(liability, pdcxDecimals)} PDCX</strong>
+                    <MatrixText
+                        as="strong"
+                        className={styles.mono}
+                        value={status ? `${formatAtomic(liability, pdcxDecimals)} PDCX` : "—"}
+                        staggerMs={150}
+                        duration={1000}
+                    />
                     <em>{liabilityHint || "—"}</em>
                 </article>
                 <article className={styles.card}>
                     <span>Coverage ratio</span>
-                    <strong>{status ? coverage : "—"}</strong>
+                    <MatrixText
+                        as="strong"
+                        value={status ? coverage : "—"}
+                        staggerMs={220}
+                        duration={900}
+                    />
                     <em>
                         {liability === BigInt(0)
                             ? "No circulating liability"
@@ -330,8 +348,15 @@ function BridgePdcxPage() {
                 <div className={styles.coverageHead}>
                     <h3>Peg coverage</h3>
                     <p>
-                        {formatAtomicGrouped(pool)} atomic PDC pool · {formatAtomicGrouped(liability)} atomic
-                        PDCx liability
+                        <MatrixText
+                            value={
+                                status
+                                    ? `${formatAtomicGrouped(pool)} atomic PDC pool · ${formatAtomicGrouped(liability)} atomic PDCx liability`
+                                    : "—"
+                            }
+                            staggerMs={280}
+                            duration={1100}
+                        />
                     </p>
                 </div>
                 <div className={styles.barTrack} aria-hidden>

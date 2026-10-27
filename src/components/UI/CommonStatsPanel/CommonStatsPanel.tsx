@@ -1,6 +1,7 @@
 import { nanoid } from "nanoid";
 import styles from "./CommonStatsPanel.module.scss";
-import { memo, useEffect } from "react";
+import { memo } from "react";
+import MatrixText from "@/components/UI/MatrixText/MatrixText";
 
 
 interface Pair {
@@ -13,14 +14,19 @@ interface CommonStatsPanelProps {
     className?: string;
 }
 
-function StatsItem({ pair }: { pair: Pair }) {
+function StatsItem({ pair, index }: { pair: Pair; index: number }) {
     return (
         <div className={styles["stats-panel__item"]}>
             <div className={styles["stats-panel__item-top"]}>
                 <p>{pair.key}</p>
             </div>
             <div className={styles["stats-panel__item-bottom"]}>
-                <h4>{pair.value}</h4>
+                <MatrixText
+                    as="h4"
+                    value={pair.value}
+                    staggerMs={80 + index * 70}
+                    duration={800 + index * 40}
+                />
             </div>
         </div>
     );
@@ -29,8 +35,8 @@ function StatsItem({ pair }: { pair: Pair }) {
 const CommonStatsPanel = memo(({ pairs, className }: CommonStatsPanelProps) => {
     return (
         <div className={`${styles["stats-panel"]} ${className || ""}`}>
-            {pairs.map((pair) => (
-                <StatsItem key={nanoid()} pair={pair} />
+            {pairs.map((pair, index) => (
+                <StatsItem key={nanoid()} pair={pair} index={index} />
             ))}
         </div>
     );
