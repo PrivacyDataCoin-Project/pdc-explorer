@@ -23,8 +23,6 @@ export const config = {
     "maxDaemonRequestCount": parseInt(process.env.MAX_DAEMON_REQUEST_COUNT || "", 10) || 1000,
     "trade_api_url": process.env.TRADE_API_URL || "",
     "matrix_api_url": process.env.MATRIX_API_URL || "",
-    "mexc_api_url": (process.env.MEXC_API_URL || "https://api.mexc.com").replace(/\/$/, ""),
-    "price_symbol": process.env.PRICE_SYMBOL || "",
 }
 
 export function nativeCoinAsset() {

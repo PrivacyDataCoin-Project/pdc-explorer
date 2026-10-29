@@ -70,7 +70,7 @@ Open `http://127.0.0.1:3000`.
 
 `NET_MODE=TEST` switches the UI into testnet mode. Point `API` at the testnet daemon RPC (`19111` in `currency_config.h`). Set `NEXT_PUBLIC_MAINNET_EXPLORER` and `NEXT_PUBLIC_TESTNET_EXPLORER` when both explorers are deployed; the header shows the switch only then.
 
-Price history is skipped unless `PRICE_SYMBOL` is a real spot market (for example `PDCUSDT`). Asset whitelist, trade, and Matrix URLs are optional and are not called when empty.
+PDC/ETH spot prices come from Trade/oracle `GET {TRADE_API_URL}/prices/usd` (never MEXC). Asset whitelist, trade, and Matrix URLs are optional and are not called when empty.
 
 ## Mempool (transaction pool) notes
 

@@ -26,7 +26,7 @@ PdcPrice.init(
       unique: true
     },
     price: { type: DataTypes.DECIMAL(20, 10), allowNull: false },
-    src: { type: DataTypes.STRING, allowNull: false, defaultValue: "mexc" },
+    src: { type: DataTypes.STRING, allowNull: false, defaultValue: "oracle" },
     raw: { type: DataTypes.JSONB, allowNull: false },
   },
   {

@@ -8,8 +8,8 @@ import {
     formatTotalCoinsDisplay,
     isPosType,
     isPowType,
-    mexcSpotSymbol,
-    readPriceChangePercent,
+    oraclePricesUsdUrl,
+    readOracleBookPrice,
     readTotalCoinsAtomic,
     transactionPathForKeyimage,
     txIdFromKeyimageLookup,
@@ -36,24 +36,25 @@ describe("total coins", () => {
     });
 });
 
-describe("mexc symbol", () => {
-    it("does not double the USDT suffix documented for PRICE_SYMBOL", () => {
-        assert.equal(mexcSpotSymbol("PDCUSDT"), "PDCUSDT");
-        assert.equal(mexcSpotSymbol(" pdcusdt "), "PDCUSDT");
+describe("oracle book price", () => {
+    it("reads positive PDC/ETH quotes from the Trade prices map", () => {
+        const book = { PDC: 0.98, ETH: 2300, BTCX: 80000 };
+        assert.equal(readOracleBookPrice(book, "PDC"), 0.98);
+        assert.equal(readOracleBookPrice(book, "eth"), 2300);
+        assert.equal(readOracleBookPrice(book, "NOPE"), undefined);
+        assert.equal(readOracleBookPrice(book, "PDC"), readOracleBookPrice({ PDC: "0.98" }, "PDC"));
+        assert.equal(readOracleBookPrice({ PDC: 0 }, "PDC"), undefined);
     });
 
-    it("appends USDT when only the base asset is passed", () => {
-        assert.equal(mexcSpotSymbol("ETH"), "ETHUSDT");
-        assert.equal(mexcSpotSymbol(""), "");
-    });
-});
-
-describe("price change", () => {
-    it("uses the percent field", () => {
-        assert.equal(readPriceChangePercent({ priceChangePercent: "-1.25" }), -1.25);
-        assert.equal(readPriceChangePercent({ priceChangePercent: 4 }), 4);
-        assert.equal(readPriceChangePercent({}), undefined);
-        assert.equal(readPriceChangePercent({ priceChangePercent: "nope" }), undefined);
+    it("builds the Trade prices/usd URL and falls back when TRADE_API_URL is empty", () => {
+        assert.equal(
+            oraclePricesUsdUrl("https://api.trade.privacydatacoin.com/api/"),
+            "https://api.trade.privacydatacoin.com/api/prices/usd",
+        );
+        assert.equal(
+            oraclePricesUsdUrl(""),
+            "https://api.trade.privacydatacoin.com/api/prices/usd",
+        );
     });
 });
 

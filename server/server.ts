@@ -37,8 +37,8 @@ import {
     burnedPdcFromAtomic,
     escapeLike,
     formatTotalCoinsDisplay,
-    mexcSpotSymbol,
-    readPriceChangePercent,
+    oraclePricesUsdUrl,
+    readOracleBookPrice,
     readTotalCoinsAtomic,
     txIdFromKeyimageLookup,
     utcDayStartSeconds,
@@ -2398,46 +2398,32 @@ cron.schedule("0 */4 * * *", async () => {
         await Asset.destroy({ where: {} });
     }
 
-    async function fetchPriceFromMexc(symbol: string): Promise<PriceData | null> {
+    /** Spot USD from Trade/oracle book only — never MEXC. */
+    async function fetchOracleSpot(ticker: string): Promise<PriceData | null> {
         try {
-            const spot = mexcSpotSymbol(symbol);
-            if (!spot) return null;
-            const [avgPriceResponse, tickerResponse] = await Promise.all([
-                axios({
-                    method: 'get',
-                    url: `${config.mexc_api_url}/api/v3/avgPrice?symbol=${encodeURIComponent(spot)}`,
-                }),
-                axios({
-                    method: 'get',
-                    url: `${config.mexc_api_url}/api/v3/ticker/24hr?symbol=${encodeURIComponent(spot)}`,
-                }),
-            ]);
-            const result: PriceData = {
+            const url = oraclePricesUsdUrl(config.trade_api_url);
+            const response = await axios.get(url, { timeout: 15000 });
+            const book = (response.data?.prices && typeof response.data.prices === "object")
+                ? response.data.prices as Record<string, unknown>
+                : null;
+            const price = readOracleBookPrice(book, ticker);
+            if (price === undefined) return null;
+            return {
+                price,
                 lastUpdated: new Date().toISOString(),
             };
-            if (avgPriceResponse.data?.price) {
-                result.price = parseFloat(avgPriceResponse.data.price);
-            }
-            const change = readPriceChangePercent(tickerResponse.data);
-            if (change !== undefined) {
-                result.usd_24h_change = change;
-            }
-            return result;
         } catch (error) {
-            console.error(`Error fetching ${symbol} price from MEXC:`, error);
+            console.error(`Error fetching ${ticker} price from oracle:`, error);
             return null;
         }
     }
 
-    // Fetch PDC spot price when PRICE_SYMBOL is set
     async function fetchPdcPrice() {
-        if (!config.price_symbol) return null;
-        return fetchPriceFromMexc(config.price_symbol);
+        return fetchOracleSpot("PDC");
     }
 
-    // Fetch Ethereum price from MEXC
     async function fetchEthereumPrice() {
-        return fetchPriceFromMexc('ETH');
+        return fetchOracleSpot("ETH");
     }
 
     // Fetch fiat rates from CoinGecko

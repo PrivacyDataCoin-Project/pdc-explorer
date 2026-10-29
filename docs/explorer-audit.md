@@ -4,14 +4,14 @@ Audit date: 2026-10-29. Scope is this repository (`pdc-explorer`) only. Findings
 
 ## Architecture
 
-The explorer is one Node process. Express serves `/api/*`, Socket.IO, and the Next.js page handler. PostgreSQL is the index. A PDC daemon (`pdcd`) is the chain source of truth. Optional HTTP dependencies are Trade, an asset whitelist, Matrix, MEXC, and CoinGecko.
+The explorer is one Node process. Express serves `/api/*`, Socket.IO, and the Next.js page handler. PostgreSQL is the index. A PDC daemon (`pdcd`) is the chain source of truth. Optional HTTP dependencies are Trade (oracle USD book), an asset whitelist, Matrix, and CoinGecko for fiat FX. PDC spot prices must not come from MEXC.
 
 ```text
 browser
   |  Next.js pages (src/pages) + Fetch (/api) + Socket.IO
   v
 Express (server/server.ts)  --JSON-RPC-->  pdcd  API/json_rpc
-  |                         --HTTPS------>  Trade / MEXC / CoinGecko / whitelist / Matrix
+  |                         --HTTPS------>  Trade (oracle prices/usd) / CoinGecko FX / whitelist / Matrix
   v
 PostgreSQL
   blocks, transactions, charts, out_info, alt_blocks, aliases, assets, pool, pdc_prices
@@ -26,8 +26,8 @@ Sync loops, all inside the same process:
 | `syncPool` | pool tx list + details | `pool` | when pool size changes |
 | `SyncService.syncAliases` | alias RPC | `aliases` (full replace) | 20s |
 | asset loop | `get_assets_list` | `assets` | 10s |
-| `syncLatestPrice` / historical | MEXC klines | `pdc_prices` | boot + cron every 4h |
-| spot price in memory | MEXC avg price + 24h ticker | `state.priceData` | same 10s loop |
+| `syncLatestPrice` | Trade/oracle `GET …/prices/usd` | `pdc_prices` | boot + cron every 4h |
+| spot price in memory | Trade/oracle USD book (PDC, ETH) | `state.priceData` | same 10s loop |
 
 `NET_MODE` and `src/config/network.ts` describe mainnet constants (12 decimals, 60s target, `Px` addresses). `API` is the daemon origin; the server appends `/json_rpc`. Chain reads that miss Postgres fall back to that RPC. There is no separate worker and no test runner in the previous tree.
 
@@ -41,7 +41,7 @@ Trust boundary: the browser and any caller of `/api` are untrusted. The daemon, 
 | `GET /api/get_tx_details/:tx_hash` daemon fallback spread the whole block row over the transaction. Block `tx_id` and numeric `id` replaced the transaction hash. | The database path already exposes `block_hash` and `block_timestamp`. The fallback now does the same and leaves transaction fields intact. |
 | Key-image search returned the integer primary key and the UI opened `/transaction/<key image>`. | The API returns the 64-hex `tx_id`. The shell search and the top search open `/transaction/<tx_id>` only when that hash is present. |
 | `GET /api/get_total_coins` ran `Number()` then `parseInt` on atomic supply. Past `2^53` (about 9000 PDC at 12 decimals) the decimal string was wrong. | Digits are taken from the raw JSON body and divided with `BigNumber`. The response is still a two-decimal string. |
-| `PRICE_SYMBOL=PDCUSDT` (as documented) was requested from MEXC as `PDCUSDTUSDT`. `usd_24h_change` used absolute `priceChange`. | A symbol that already ends in `USDT` is left alone. `ETH` still becomes `ETHUSDT`. The percent field is `priceChangePercent`. |
+| In-memory spot and `pdc_prices` sync called MEXC (`PRICE_SYMBOL` / klines). | Spot PDC/ETH and latest DB snapshots now use Trade/oracle `GET …/prices/usd` only. MEXC helpers and historical klines backfill are removed. |
 | Confirmed-transactions chart treated an already-converted unix second offset as milliseconds (`new Date(seconds)`), so the SQL window collapsed near 1970. | The lower bound is the UTC day containing that second, matching the `% 86400` buckets. |
 | Alt-block `type` is an integer. The UI compared it to the string `"0"` / `"1"`, so list rows were all PoW and the detail page was all PoS. Both timestamp columns showed `timestamp`. Hash links pointed at `/alt-blocks/:hash`, which has no page. Miner text is stored as `miner_txt_info`. | Type checks use `String(type)`. The second column uses `actual_timestamp` when present. Links go to `/block/:hash?alt=1`, and that page loads alt-block details. Miner text reads either column name. |
 | Every info tick loaded every non-zero fee into Node to sum burned PDC. | One SQL `SUM` on the transactions model. Non-numeric fee text contributes 0 instead of poisoning the sum. |
@@ -60,7 +60,7 @@ Trust boundary: the browser and any caller of `/api` are untrusted. The daemon, 
 | Low | `heapdump` is a dependency and is not imported. | No runtime effect until something `require`s it. Removing it is a lockfile change, not a behavior fix. |
 | Low | `Access-Control-Allow-Origin: *` on Express. | Public read API. Socket.IO already pins `FRONTEND_API`. |
 | Info | Stats "Transactions" is `height + tx_count`. | Sample `getinfo` in `src/utils/apiExamples.ts` has `tx_count` (7391) lower than `height` (18435), which matches coinbase transactions being omitted from `tx_count`. Not treated as a bug. |
-| Info | Historical MEXC klines in `pdcPrice.service.ts` use `PRICE_SYMBOL` as the full symbol and do not append `USDT`. | That matches the `.env.example` comment. Only the in-memory ticker helper was appending a second suffix. |
+| Info | Oracle book has no long historical kline series. | `syncHistoricalPrice` is a no-op; `syncLatestPrice` stores oracle PDC every ~4h. |
 
 ## How to verify
 
@@ -70,7 +70,7 @@ Unit tests do not need Postgres or `pdcd`:
 npm test
 ```
 
-Expected: `src/utils/pure.test.ts` and `server/exceptionHandler.test.ts` pass. They cover supply past `2^53`, the MEXC symbol, the UTC chart bound, integer block types, the view-key limit cap, key-image hash vs row id, and the JSON 500 handler.
+Expected: `src/utils/pure.test.ts` and `server/exceptionHandler.test.ts` pass. They cover supply past `2^53`, oracle book price helpers, the UTC chart bound, integer block types, the view-key limit cap, key-image hash vs row id, and the JSON 500 handler.
 
 With Postgres, a daemon, and `npm run dev`:
 
@@ -79,7 +79,7 @@ With Postgres, a daemon, and `npm run dev`:
 3. `GET /api/get_tx_details/<tx hash>` for a transaction that is not yet in `transactions` still returns that transaction hash in `id` or `tx_id`, and `block_hash` separately when the block row exists.
 4. Search a key image that exists in `transactions.ins`. The next page is `/transaction/<64 hex tx id>`, not the key image and not a small integer.
 5. `GET /api/get_total_coins` is a decimal string. For atomic `1000000000000` it is `1.00`.
-6. With `PRICE_SYMBOL=PDCUSDT`, the MEXC request path contains `symbol=PDCUSDT` once.
+6. `GET /api/pdc_market` and the asset price loop use Trade/oracle `prices/usd` (no MEXC host).
 7. `GET /api/get_chart/ConfirmTransactPerDay/<now minus 7 days in ms>` does not return buckets from 1970.
 8. `POST /api/find_outs_in_recent_blocks` with `limit: 100000` is forwarded with `blocks_limit` 100. `GET` on that path stays 405.
 

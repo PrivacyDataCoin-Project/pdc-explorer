@@ -17,21 +17,26 @@ export function formatTotalCoinsDisplay(raw: unknown): string | null {
 }
 
 /**
- * MEXC spot symbol. `PRICE_SYMBOL` is documented as a full market such as `PDCUSDT`,
- * while the Ethereum helper passes the base asset `ETH`.
+ * Positive USD quote from a Trade/oracle `prices` book (`GET …/prices/usd`).
+ * Explorer must not use MEXC for PDC display prices.
  */
-export function mexcSpotSymbol(symbol: string): string {
-    const trimmed = symbol.trim().toUpperCase();
-    if (!trimmed) return "";
-    return trimmed.endsWith("USDT") ? trimmed : `${trimmed}USDT`;
+export function readOracleBookPrice(
+    book: Record<string, unknown> | null | undefined,
+    ticker: string,
+): number | undefined {
+    if (!book || typeof book !== "object") return undefined;
+    const key = ticker.trim();
+    if (!key) return undefined;
+    const raw = book[key] ?? book[key.toUpperCase()] ?? book[key.toLowerCase()];
+    const parsed = typeof raw === "number" ? raw : parseFloat(String(raw ?? ""));
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 }
 
-/** 24h move as a percent. Ignores MEXC `priceChange`, which is an absolute quote delta. */
-export function readPriceChangePercent(payload: { priceChangePercent?: unknown } | null | undefined): number | undefined {
-    const raw = payload?.priceChangePercent;
-    if (raw === undefined || raw === null || raw === "") return undefined;
-    const parsed = typeof raw === "number" ? raw : parseFloat(String(raw));
-    return Number.isFinite(parsed) ? parsed : undefined;
+/** Prefer Trade API; fall back to the public oracle publisher. */
+export function oraclePricesUsdUrl(tradeApiUrl: string | undefined | null): string {
+    const trade = (tradeApiUrl || "").trim().replace(/\/$/, "");
+    if (trade) return `${trade}/prices/usd`;
+    return "https://api.trade.privacydatacoin.com/api/prices/usd";
 }
 
 /** Unix seconds at the UTC start of the day containing `offsetSeconds`. */
