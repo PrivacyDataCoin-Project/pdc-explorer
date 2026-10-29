@@ -32,6 +32,17 @@ import { syncHistoricalPrice, syncLatestPrice } from "./services/pdcPrice.servic
 import PdcPrice from "./schemes/PdcPrice";
 import cron from "node-cron";
 import syncService from "./services/sync.service.ts";
+import {
+    blocksLimit,
+    burnedPdcFromAtomic,
+    escapeLike,
+    formatTotalCoinsDisplay,
+    mexcSpotSymbol,
+    readPriceChangePercent,
+    readTotalCoinsAtomic,
+    txIdFromKeyimageLookup,
+    utcDayStartSeconds,
+} from "../src/utils/pure";
 
 // @ts-ignore
 const __dirname = import.meta.dirname;
@@ -124,13 +135,12 @@ async function waitForDb() {
         };
         const address = body.address;
         const viewkey = body.viewkey;
-        const limit = body.limit || 5;
 
-        if (!address) {
+        if (typeof address !== "string" || address.length === 0 || address.length > 512) {
             return res.status(400).json({ error: 'Address is required' });
         }
 
-        if (!viewkey) {
+        if (typeof viewkey !== "string" || viewkey.length === 0 || viewkey.length > 512) {
             return res.status(400).json({ error: 'Viewkey is required' });
         }
 
@@ -142,7 +152,7 @@ async function waitForDb() {
                 params: {
                     "address": address,
                     "viewkey": viewkey,
-                    "blocks_limit": limit
+                    "blocks_limit": blocksLimit(body.limit)
                 }
             }
         })
@@ -189,18 +199,16 @@ async function waitForDb() {
                 data: {
                     method: 'getinfo',
                     params: { flags: parseInt("4294967295") }
-                }
+                },
+                transformResponse: [(data) => data],
             })
 
-            let str = response.data.result.total_coins
-            let result: number | undefined;
-
-            let totalCoins = Number(str)
-            if (typeof totalCoins === 'number') {
-                result = parseInt(totalCoins.toString()) / 1000000000000
+            const display = formatTotalCoinsDisplay(readTotalCoinsAtomic(String(response.data ?? "")));
+            if (display === null) {
+                res.status(502).send("Error");
+                return;
             }
-            let r2 = result?.toFixed(2)
-            res.send(r2)
+            res.send(display)
         })
     );
 
@@ -393,7 +401,7 @@ async function waitForDb() {
             const { offset, count, search, filter } = req.params;
             const limit = Math.min(parseInt(count), config.maxDaemonRequestCount);
             const parsedOffset = parseInt(offset);
-            const searchTerm = search.toLowerCase();
+            const searchTerm = escapeLike(search.toLowerCase());
             const premiumOnly = filter === 'premium';
 
             const whereClause: any = {
@@ -530,7 +538,8 @@ async function waitForDb() {
 
     app.get('/api/get_chart/:chart/:offset', async (req, res) => {
         const { chart, offset } = req.params;
-        const offsetDate = parseInt(offset, 10) / 1000;
+        const offsetRaw = parseInt(offset, 10);
+        const offsetDate = Number.isFinite(offsetRaw) ? offsetRaw / 1000 : 0;
 
         if (!chart) {
             return res.status(400).json({ error: 'Invalid parameters' });
@@ -709,8 +718,7 @@ async function waitForDb() {
 
         } else if (chart === 'ConfirmTransactPerDay') {
 
-            const offsetDateStartOfDay = new Date(offsetDate);
-            offsetDateStartOfDay.setHours(0, 0, 0, 0);
+            const dayStart = utcDayStartSeconds(offsetDate);
 
             // Group by day (86400-second intervals)
             const result = await Chart.findAll({
@@ -725,7 +733,7 @@ async function waitForDb() {
                 order: [[literal('"at"'), 'ASC']],
                 where: {
                     actual_timestamp: {
-                        [Op.gt]: +offsetDateStartOfDay / 1000,
+                        [Op.gt]: dayStart,
                     },
                 },
                 raw: true,
@@ -782,13 +790,15 @@ async function waitForDb() {
                                 data.result.tx_info.outs = JSON.stringify(data.result.tx_info.outs);
                             }
 
-                            const blockInfo = await Block.findOne({
+                            const blockRow = await Block.findOne({
                                 where: { height: data.result?.tx_info?.keeper_block?.toString() },
                             });
+                            const blockJson = blockRow?.toJSON() as { tx_id?: string; timestamp?: unknown } | undefined;
 
                             res.json({
                                 ...data.result.tx_info,
-                                ...(blockInfo?.toJSON() || {}),
+                                block_hash: blockJson?.tx_id ?? null,
+                                block_timestamp: blockJson?.timestamp ?? null,
                                 last_block: lastBlock.height,
                             });
                         } else {
@@ -830,7 +840,8 @@ async function waitForDb() {
                     try {
                         const ins = JSON.parse(tx.ins);
                         if (Array.isArray(ins) && ins.find(e => e.kimage_or_ms_id === id)) {
-                            return res.json({ result: "FOUND", data: tx.id });
+                            const txId = txIdFromKeyimageLookup(tx.tx_id);
+                            if (txId) return res.json({ result: "FOUND", data: txId });
                         }
                     } catch (error) {
                         // Skip the transaction if there's an error parsing the 'ins' field
@@ -884,13 +895,14 @@ async function waitForDb() {
                 }
 
                 // Search in the 'aliases' table
+                const likeId = `%${escapeLike(id)}%`;
                 let aliasResult = await Alias.findOne({
                     where: {
                         enabled: true,
                         [Op.or]: [
-                            { alias: { [Op.like]: `%${id}%` } },
-                            { address: { [Op.like]: `%${id}%` } },
-                            { comment: { [Op.like]: `%${id}%` } }
+                            { alias: { [Op.like]: likeId } },
+                            { address: { [Op.like]: likeId } },
+                            { comment: { [Op.like]: likeId } }
                         ]
                     },
                     order: [['block', 'DESC']],
@@ -1256,14 +1268,17 @@ async function waitForDb() {
         exceptionHandler(async (req, res) => {
             try {
                 const start = parseInt(req.params.start, 10);
-                const count = parseInt(req.params.count, 10);
+                let count = parseInt(req.params.count, 10);
 
-                if (!isNaN(start) && start >= 0 && count) {
-                    const result = await getBlocksDetails({ start, count });
-                    res.json(result);
-                } else {
+                if (!Number.isFinite(start) || start < 0 || !Number.isFinite(count) || count <= 0) {
                     res.status(400).json({ error: 'Invalid parameters' });
+                    return;
                 }
+                if (count > config.maxDaemonRequestCount) {
+                    count = config.maxDaemonRequestCount;
+                }
+                const result = await getBlocksDetails({ start, count });
+                res.json(result);
             } catch (error) {
                 console.log(error);
 
@@ -1324,22 +1339,26 @@ async function waitForDb() {
         exceptionHandler(async (req, res, next) => {
             let count = parseInt(req.params.count, 10);
 
-            if (count !== undefined) {
-                res.json(await getTxPoolDetails(count))
-            } else {
+            if (!Number.isFinite(count) || count < 0) {
                 res.status(400).json({ error: 'Invalid parameters' });
+                return;
             }
+            res.json(await getTxPoolDetails(count))
         })
     );
 
     app.get(
         '/api/get_alt_blocks_details/:offset/:count',
         exceptionHandler(async (req, res, next) => {
-            let offset = parseInt(req.params.offset)
-            let count = parseInt(req.params.count)
+            let offset = parseInt(req.params.offset, 10);
+            let count = parseInt(req.params.count, 10);
 
+            if (!Number.isFinite(offset) || offset < 0 || !Number.isFinite(count) || count <= 0) {
+                res.status(400).json({ error: 'Invalid parameters' });
+                return;
+            }
             if (count > config.maxDaemonRequestCount) {
-                count = config.maxDaemonRequestCount
+                count = config.maxDaemonRequestCount;
             }
             const result = await AltBlock.findAll({
                 order: [['height', 'DESC']],
@@ -1347,7 +1366,7 @@ async function waitForDb() {
                 offset: offset
             });
 
-            return result.length > 0 ? result.map(e => e.toJSON()) : [];
+            res.json(result.map(e => e.toJSON()));
         })
     );
 
@@ -1375,44 +1394,6 @@ async function waitForDb() {
             }
         })
     );
-
-    app.get(
-        '/api/get_alt_blocks_details/:offset/:count',
-        exceptionHandler(async (req, res) => {
-            let offset = req.params.offset
-            let count = req.params.count
-            const response = await axios({
-                method: 'get',
-                url: config.api,
-                data: {
-                    method: 'get_alt_blocks_details',
-                    params: {
-                        offset: parseInt(offset),
-                        count: parseInt(count)
-                    }
-                }
-            })
-            res.json(response.data)
-        })
-    )
-
-    app.get(
-        '/api/get_alt_block_details/:id',
-        exceptionHandler(async (req, res) => {
-            let id = req.params.id
-            const response = await axios({
-                method: 'get',
-                url: config.api,
-                data: {
-                    method: 'get_alt_block_details',
-                    params: {
-                        id: id
-                    }
-                }
-            })
-            res.json(response.data)
-        })
-    )
 
     app.get(
         '/api/get_all_pool_tx_list',
@@ -1627,43 +1608,6 @@ async function waitForDb() {
         return res.json(responseData);
     }));
 
-    app.get('/api/get_asset_details/:asset_id', exceptionHandler(async (req, res) => {
-        const { asset_id } = req.params;
-
-        const dbAsset = await Asset.findOne({
-            where: { asset_id }
-        });
-
-        if (!dbAsset) {
-            // Fetch the external asset list
-            const allAssets = [];
-            if (config.assets_whitelist_url) {
-                const response = await axios({
-                    method: 'get',
-                    url: config.assets_whitelist_url
-                });
-                if (!response.data.assets) {
-                    throw new Error('Assets whitelist response not correct');
-                }
-                allAssets.push(...response.data.assets);
-            }
-
-            allAssets.unshift(nativeCoinAsset());
-
-            const whitelistedAsset = allAssets.find(e => e.asset_id === asset_id);
-
-            if (whitelistedAsset) {
-                return res.json({ success: true, asset: whitelistedAsset });
-            } else {
-                return res.json({ success: false, data: "Asset not found" });
-            }
-        } else {
-            return res.json({ success: true, asset: dbAsset });
-        }
-    })
-    );
-
-
     app.post('/api/get_assets_price_rates', exceptionHandler(async (req, res) => {
         const { assetsIds } = req.body;
         if (!assetsIds) {
@@ -1720,7 +1664,7 @@ async function waitForDb() {
             })
         }
 
-        const matrixAddressesResponse = await fetch(`${config.matrix_api_url}/get-registered-addresses/?page=${page}&items=${items}`)
+        const matrixAddressesResponse = await fetch(`${config.matrix_api_url}/get-registered-addresses/?page=${encodeURIComponent(String(page))}&items=${encodeURIComponent(String(items))}`)
             .then(res => res.json())
 
         const { addresses } = matrixAddressesResponse;
@@ -2295,30 +2239,20 @@ async function waitForDb() {
                     database_height: databaseHeight
                 });
 
-                const txs = await Transaction.findAll({
+                const burnedRow = await Transaction.findOne({
+                    attributes: [[
+                        literal(`COALESCE(SUM(CASE WHEN "fee" ~ '^[0-9]+$' THEN "fee"::numeric ELSE 0 END), 0)::text`),
+                        "burned",
+                    ]],
                     where: {
-                        keeper_block: {
-                            [Op.gt]: 100
-                        },
-                        fee: {
-                            [Op.ne]: "0"
-                        }
+                        keeper_block: { [Op.gt]: 100 },
                     },
-                    attributes: ['fee'],
-                    raw: true
-                });
+                    raw: true,
+                }) as unknown as { burned: string } | null;
 
-                let pdcBurnedBig = new BigNumber(0);
+                const pdcBurned = burnedPdcFromAtomic(burnedRow?.burned ?? "0");
 
-                txs.forEach(tx => {
-                    pdcBurnedBig = pdcBurnedBig.plus(new BigNumber(tx.fee));
-                });
-
-
-                console.log('PDC BURNED: ', pdcBurnedBig.toString());
-
-
-                const pdcBurned = pdcBurnedBig.div(new BigNumber(10).pow(12)).toNumber();
+                console.log('PDC BURNED: ', burnedRow?.burned ?? "0");
 
                 const refreshedVersion = readDaemonVersion(response.data);
 
@@ -2466,14 +2400,16 @@ cron.schedule("0 */4 * * *", async () => {
 
     async function fetchPriceFromMexc(symbol: string): Promise<PriceData | null> {
         try {
+            const spot = mexcSpotSymbol(symbol);
+            if (!spot) return null;
             const [avgPriceResponse, tickerResponse] = await Promise.all([
                 axios({
                     method: 'get',
-                    url: `${config.mexc_api_url}/api/v3/avgPrice?symbol=${symbol}USDT`,
+                    url: `${config.mexc_api_url}/api/v3/avgPrice?symbol=${encodeURIComponent(spot)}`,
                 }),
                 axios({
                     method: 'get',
-                    url: `${config.mexc_api_url}/api/v3/ticker/24hr?symbol=${symbol}USDT`,
+                    url: `${config.mexc_api_url}/api/v3/ticker/24hr?symbol=${encodeURIComponent(spot)}`,
                 }),
             ]);
             const result: PriceData = {
@@ -2482,8 +2418,9 @@ cron.schedule("0 */4 * * *", async () => {
             if (avgPriceResponse.data?.price) {
                 result.price = parseFloat(avgPriceResponse.data.price);
             }
-            if (tickerResponse.data?.priceChange) {
-                result.usd_24h_change = parseFloat(tickerResponse.data.priceChange);
+            const change = readPriceChangePercent(tickerResponse.data);
+            if (change !== undefined) {
+                result.usd_24h_change = change;
             }
             return result;
         } catch (error) {

@@ -79,3 +79,7 @@ The home-page **Transaction Pool** is synced from the daemon into Postgres (`poo
 A sync bug used `attributes: ['id']` (row PK) when checking existing txs, so the same `tx_id` could be inserted more than once. The UI then showed one hash twice (same timestamp/size/fee) — that is **not** a double broadcast.
 
 Mitigations (2026-10-22): unique index on `tx_id`, correct attribute filter + in-batch dedupe on insert, and API/UI dedupe by `tx_id` when emitting pool details.
+
+## Audit
+
+See [docs/explorer-audit.md](docs/explorer-audit.md) for the architecture map, fixed defects, open items, and how to verify.

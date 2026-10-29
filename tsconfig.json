@@ -31,7 +31,8 @@
     "src"
   ],
   "exclude": [
-    "src/setupProxy.js"
+    "src/setupProxy.js",
+    "**/*.test.ts"
   ],
   "ts-node": {
     "esm": true

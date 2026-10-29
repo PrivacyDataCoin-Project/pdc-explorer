@@ -37,7 +37,7 @@ function AltBlocks() {
 
     const tableElements = altBlocks.map(e => {
         const hash = e.hash;
-        const hashLink = hash ? "/alt-blocks/" + hash : "/";
+        const hashLink = hash ? "/block/" + hash + "?alt=1" : "/";
 
         return [
             <p>
@@ -45,7 +45,7 @@ function AltBlocks() {
                 {` (${e.type})`}
             </p>,
             Utils.formatTimestampUTC(e.timestamp),
-            Utils.formatTimestampUTC(e.timestamp),
+            Utils.formatTimestampUTC(e.actualTimestamp || e.timestamp),
             `${e.size} bytes`,
             e.transactions?.toString() || "0",
             <AliasText href={hashLink}>{e.hash}</AliasText>

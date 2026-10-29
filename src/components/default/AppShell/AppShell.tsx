@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { FormEvent, useContext, useEffect, useState } from "react";
 import Fetch from "@/utils/methods";
+import { transactionPathForKeyimage } from "@/utils/pure";
 import { Store } from "@/store/store-reducer";
 import { NETWORK } from "@/config/network";
 import { ExplorerStatusType } from "@/interfaces/state/Block";
@@ -211,9 +212,10 @@ function AppShell({ open, onNavigate }: { open: boolean; onNavigate: () => void 
             }
 
             const txByKeyimageRes = await Fetch.getTxByKeyimage(input);
-            if (txByKeyimageRes && typeof txByKeyimageRes === "object" && txByKeyimageRes.data) {
+            const txPath = transactionPathForKeyimage(txByKeyimageRes?.data);
+            if (txPath) {
                 onNavigate();
-                await router.push(`/transaction/${input}`);
+                await router.push(txPath);
                 return;
             }
 

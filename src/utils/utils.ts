@@ -3,6 +3,7 @@ import ChartSeriesElem from "../interfaces/common/ChartSeriesElem";
 import Block from "../interfaces/state/Block";
 import { chartDataFieldMap, chartRequestNames } from "./constants";
 import Fetch from "./methods";
+import { isPosType, isPowType, unixSeconds } from "./pure";
 
 class Utils {
     static shortenAddress(address: string): string {
@@ -82,14 +83,28 @@ class Utils {
         if (result.sucess === false) return [];
         if (!(result instanceof Array)) return [];
 
-        return (reverse ? result.reverse() : result).map((e: any) => ({
-            height: e.height,
-            type: e.type === '0' ? "PoS" : "PoW",
-            timestamp: +new Date(parseInt(e.timestamp, 10)),
-            size: e.total_txs_size,
-            transactions: e.tr_count,
-            hash: !hashField ? e.tx_id : e.hash
-        } as Block));
+        return (reverse ? result.reverse() : result).map((e: any) => {
+            const rawTxs = e.transactions_details ?? e.transaction_details;
+            let txCount = e.tr_count;
+            if (txCount == null || txCount === "") {
+                try {
+                    const parsed = typeof rawTxs === "string" ? JSON.parse(rawTxs) : rawTxs;
+                    txCount = Array.isArray(parsed) ? parsed.length : 0;
+                } catch {
+                    txCount = 0;
+                }
+            }
+            const actual = unixSeconds(e.actual_timestamp);
+            return {
+                height: e.height,
+                type: isPosType(e.type) ? "PoS" : "PoW",
+                timestamp: unixSeconds(e.timestamp),
+                actualTimestamp: Number.isFinite(actual) ? actual : undefined,
+                size: e.total_txs_size ?? e.block_cumulative_size ?? e.size,
+                transactions: txCount,
+                hash: !hashField ? e.tx_id : e.hash
+            } as Block;
+        });
     }
 
     static timeElapsedString(timestamp: number, includeSeconds: boolean = false): string {
@@ -286,11 +301,11 @@ class Utils {
         if (result.success === false) return null;
 
         const blockInfo = {
-            type: result.type === "1" ? "PoW" : "PoS" as "PoW" | "PoS",
+            type: isPowType(result.type) ? "PoW" : "PoS" as "PoW" | "PoS",
             timestamp: result.timestamp || undefined,
             actualTimestamp: result.actual_timestamp || undefined,
             difficulty: Utils.formatNumber(result.difficulty || "", 0),
-            minerTextInfo: result.miner_text_info || undefined,
+            minerTextInfo: result.miner_text_info || result.miner_txt_info || undefined,
             cummulativeDiffAdjusted: Utils.formatNumber(result.cumulative_diff_adjusted || "", 0),
             cummulativeDiffPresize: Utils.formatNumber(result.cumulative_diff_precise || "", 0),
             orphan: result.is_orphan || false,
@@ -323,7 +338,7 @@ class Utils {
             transactionsSize: result.total_txs_size || "0",
             alreadyGeneratedCoins: result.already_generated_coins || undefined,
             object_in_json: result.object_in_json || undefined,
-            tx_id: result.tx_id || undefined,
+            tx_id: result.tx_id || result.hash || undefined,
             prev_id: result.prev_id || undefined,
             minor_version: result?.object_in_json?.split('\"minor_version\": ')?.[1]?.split(',')?.[0] || '-',
             major_version: result?.object_in_json?.split('\"major_version\": ')?.[1]?.split(',')?.[0] || '-',

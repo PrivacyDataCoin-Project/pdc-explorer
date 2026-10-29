@@ -48,7 +48,7 @@ export function log(msg: string) {
     console.log(
         now.getFullYear() +
         '-' +
-        now.getMonth() +
+        (now.getMonth() + 1) +
         '-' +
         now.getDate() +
         ' ' +

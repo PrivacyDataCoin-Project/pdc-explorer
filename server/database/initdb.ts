@@ -1,6 +1,8 @@
 import pg from "pg";
+import { assertPostgresIdent } from "../../src/utils/pure";
 
 async function initdb() {
+    const database = assertPostgresIdent(process.env.PGDATABASE, "PGDATABASE");
     const pool = new pg.Pool(
         {
             user: process.env.PGUSER,
@@ -15,7 +17,7 @@ async function initdb() {
     );
 
     try {
-        await pool.query(`CREATE DATABASE "${process.env.PGDATABASE}" `);
+        await pool.query(`CREATE DATABASE "${database}"`);
     } catch (error: any) {
         if (error.code === "42P04") {
             console.log("Database already exists, skipping creation");

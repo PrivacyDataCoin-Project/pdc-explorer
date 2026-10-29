@@ -26,12 +26,12 @@ interface BlockProps extends BlockPageProps {
 }
 
 function Block(props: BlockProps) {
-    const { alt } = props;
+    const router = useRouter();
+    const alt = props.alt || router.query.alt === "1";
 
     const [burgerOpened, setBurgerOpened] = useState(false);
     const [jsonPopupOpened, setJsonPopupOpened] = useState(false);
 
-    const router = useRouter();
     const { hash: hashQuery } = router.query;
 
     const hash = Array.isArray(hashQuery) ? hashQuery[0] : hashQuery;
@@ -92,7 +92,7 @@ function Block(props: BlockProps) {
         }
 
         fetchBlock();
-    }, [hash]);
+    }, [hash, alt]);
 
     function BlockInfo() {
 
