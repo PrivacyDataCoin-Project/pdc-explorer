@@ -2,6 +2,7 @@ interface Block {
     height: number;
     type: "PoS" | "PoW",
     timestamp: number;
+    actualTimestamp?: number;
     size: number;
     transactions: number;
     hash: string;

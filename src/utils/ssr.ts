@@ -191,12 +191,13 @@ export async function getBlock(context: GetServerSidePropsContext) {
 
     const blockData = await (async () => {
         const hash = context.params?.hash as string | undefined;
+        const alt = context.query.alt === "1";
 
         if (!hash) {
             return null;
         }
     
-        const blockInfo = await Utils.fetchBlock(hash);
+        const blockInfo = await Utils.fetchBlock(hash, alt);
 
         return blockInfo;
     })();
@@ -205,6 +206,7 @@ export async function getBlock(context: GetServerSidePropsContext) {
     return {
         props: {
             ...stats.props,
+            alt: context.query.alt === "1",
             blockData: Utils.replaceUndefinedWithNull(blockData)
         },
     };

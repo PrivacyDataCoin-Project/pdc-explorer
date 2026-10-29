@@ -207,6 +207,6 @@ export const emitSocketInfo = async (socket?: Socket) => {
         const emitter = socket || io;
 
         emitter.emit('get_info', JSON.stringify(blockInfo));
-        emitter.emit('get_visibility_info', getVisibilityInfo());
+        emitter.emit('get_visibility_info', await getVisibilityInfo());
     }
 }

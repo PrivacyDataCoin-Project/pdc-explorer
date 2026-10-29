@@ -44,7 +44,8 @@
     "client": "next dev",
     "build": "next build",
     "dev": "npx nodemon --exec tsx ./server/server.ts",
-    "start": "cross-env NODE_ENV=production NODE_OPTIONS='--max-old-space-size=8192' tsx ./server/server.ts"
+    "start": "cross-env NODE_ENV=production NODE_OPTIONS='--max-old-space-size=8192' tsx ./server/server.ts",
+    "test": "tsx --test src/utils/pure.test.ts server/exceptionHandler.test.ts"
   },
   "eslintConfig": {
     "extends": [

@@ -5,6 +5,7 @@ import SearchImg from "@/assets/images/UI/search.svg";
 import BackImg from "@/assets/images/UI/back.svg";
 import { useState } from "react";
 import Fetch from "@/utils/methods";
+import { transactionPathForKeyimage } from "@/utils/pure";
 import Link from "next/link";
 import InfoTopPanelProps from "./InfoTopPanel.props";
 import { useRouter } from 'next/router'
@@ -35,9 +36,10 @@ function InfoTopPanel(props: InfoTopPanelProps) {
             }
 
             const txByKeyimageRes = await Fetch.getTxByKeyimage(input);
+            const txPath = transactionPathForKeyimage(txByKeyimageRes?.data);
 
-            if (txByKeyimageRes && typeof txByKeyimageRes === "object" && txByKeyimageRes.data) {
-                return router.push("/transaction/" + input);
+            if (txPath) {
+                return router.push(txPath);
             }
 
             if (input.match(/^\d+$/)) {
